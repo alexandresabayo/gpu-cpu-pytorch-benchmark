@@ -1,0 +1,29 @@
+# Python version: 3.10
+# For CUDA support, ensure you have CUDA 11.8+ installed
+
+--index-url https://download.pytorch.org/whl/cu118
+--extra-index-url https://pypi.org/simple
+
+# Deep Learning Framework
+torch
+torchvision
+
+# Machine learning
+scikit-learn
+ 
+# Data Processing
+pandas
+numpy
+ 
+# Visualization (for optional plotting in notebook)
+matplotlib
+seaborn
+ 
+# Jupyter Notebook Support
+jupyter
+notebook
+ipython
+ipykernel
+ 
+# Additional utilities
+tqdm

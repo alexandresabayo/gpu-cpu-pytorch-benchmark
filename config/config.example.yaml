@@ -1,0 +1,35 @@
+# PyTorch GPU vs CPU Training Comparison Configuration
+
+# Training parameters
+training:
+  batch_size: 256
+  epochs: 200
+  learning_rate: 0.001
+  train_ratio: 0.7
+  val_ratio: 0.2
+  test_ratio: 0.1
+  dropout: 0.2
+  early_stopping: true
+  patience: 20
+  show_progress: false
+  training_history: true
+
+# Model configurations
+models:
+  temperature:
+    seq_length: 84
+    pred_length: 12
+    features: 1
+  
+  mnist:
+    channels: 1
+    height: 28
+    width: 28
+    num_classes: 10
+
+# TODO: implement dataset loading from .yaml
+datasets:
+  temperature_inputs: "datasets/temperature_inputs.csv"
+  temperature_labels: "datasets/temperature_labels.csv"
+  mnist_inputs: "datasets/mnist_digit_inputs.csv"
+  mnist_labels: "datasets/mnist_digit_labels.csv"

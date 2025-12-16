@@ -1,0 +1,90 @@
+"""Configuration classes for experiments"""
+
+import yaml
+from dataclasses import dataclass
+
+# Define dataclasses first to avoid circular references
+@dataclass
+class TrainingConfig:
+    """Centralized configuration for training experiments"""
+    batch_size: int = 256
+    epochs: int = 200
+    learning_rate: float = 0.001
+    num_workers: int = 4
+    train_ratio: float = 0.7
+    val_ratio: float = 0.2
+    test_ratio: float = 0.1
+    dropout: float = 0.2
+    training_history: bool = True
+    show_progress: bool = False
+    early_stopping : bool = True
+    patience: int = 20
+    
+@dataclass
+class TemperatureConfig:
+    """Temperature time series specification"""
+    seq_length: int = 84        # Historical timesteps
+    pred_length: int = 12       # Prediction horizon
+    features: int = 1           # Number of features per timestep
+
+@dataclass
+class MNISTConfig:
+    """MNIST dataset specification"""
+    channels: int = 1
+    height: int = 28
+    width: int = 28
+    num_classes: int = 10
+
+def load_config_from_yaml() -> tuple[TrainingConfig, TemperatureConfig, MNISTConfig]:
+    """Load configuration from YAML file for all dataclasses"""
+    try:
+        with open('config.yaml', 'r') as f:
+            yaml_config = yaml.safe_load(f)
+        
+        # Load TrainingConfig from YAML
+        training_config = yaml_config.get('training', {})
+        training = TrainingConfig(
+            batch_size=training_config.get('batch_size', 256),
+            epochs=training_config.get('epochs', 200),
+            learning_rate=training_config.get('learning_rate', 0.001),
+            train_ratio=training_config.get('train_ratio', 0.7),
+            val_ratio=training_config.get('val_ratio', 0.2),
+            test_ratio=training_config.get('test_ratio', 0.1),
+            dropout=training_config.get('dropout', 0.2),
+            training_history=training_config.get('training_history', True),
+            show_progress=training_config.get('show_progress', False),
+            early_stopping=training_config.get('early_stopping', True),
+            patience=training_config.get('patience', 20)
+        )
+        
+        # Load TemperatureConfig from YAML
+        temp_config = yaml_config.get('models', {}).get('temperature', {})
+        temperature = TemperatureConfig(
+            seq_length=temp_config.get('seq_length', 84),
+            pred_length=temp_config.get('pred_length', 12),
+            features=temp_config.get('features', 1)
+        )
+        
+        # Load MNISTConfig from YAML
+        mnist_config = yaml_config.get('models', {}).get('mnist', {})
+        mnist = MNISTConfig(
+            channels=mnist_config.get('channels', 1),
+            height=mnist_config.get('height', 28),
+            width=mnist_config.get('width', 28),
+            num_classes=mnist_config.get('num_classes', 10)
+        )
+        
+        print(f"Configuration loaded from config.yaml")
+        
+        # Return all configs as a dictionary for easy access
+        return training, temperature, mnist
+        
+    except FileNotFoundError:
+        print("⚠ config.yaml not found, using default configuration")
+        return training, temperature, mnist
+    except yaml.YAMLError as e:
+        print(f"⚠ YAML parsing error in config.yaml: {e}, using default configuration")
+        return training, temperature, mnist
+    except Exception as e:
+        print(f"⚠ Error loading config.yaml: {e}, using default configuration")
+        return training, temperature, mnist
