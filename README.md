@@ -2,46 +2,6 @@
 
 A comprehensive benchmarking project comparing training performance between CPU and GPU for various neural network architectures on different datasets.
 
-## Project Structure
-
-```
-pytorch-comparison/
-├── datasets/                  # Dataset files
-│   ├── temperature_inputs.csv
-│   ├── temperature_labels.csv
-│   ├── mnist_digit_inputs.csv
-│   └── mnist_digit_labels.csv
-├── src/                      # Main source code
-│   ├── __init__.py
-│   ├── models/           # Neural network models
-│   │   ├── __init__.py
-│   │   ├── linear.py     # MLP model
-│   │   ├── conv1d.py     # 1D CNN for time series
-│   │   ├── conv2d.py     # 2D CNN for images
-│   │   └── lstm.py       # LSTM model
-│   ├── data/             # Data loading and processing
-│   │   ├── __init__.py
-│   │   ├── loading.py
-│   │   └── processing.py
-│   ├── training/         # Training logic
-│   │   ├── __init__.py
-│   │   ├── core.py       # Core training functions
-│   │   └── experiment.py # Experiment running
-│   ├── utils/            # Utility functions
-│   │   ├── __init__.py
-│   │   ├── config.py     # Configuration classes
-│   │   ├── metrics.py    # Metrics calculation
-│   │   └── helpers.py    # Helper functions
-│   └── visualization/    # Visualization utilities
-│       ├── __init__.py
-│       ├── training.py   # Training visualization
-│       └── predictions.py # Prediction visualization
-├── main.py                  # Main execution script
-├── requirements.txt         # Python dependencies
-├── config.yaml              # Configuration file
-└── README.md                # This file
-```
-
 ## Features
 
 - **Multiple Model Architectures**: MLP, 1D CNN, 2D CNN, LSTM
@@ -56,29 +16,16 @@ pytorch-comparison/
 ### Manual Setup with Conda
 
 ```bash
-# Create the conda environment
 conda env create -n pytorch python=3.10.12
-
-# Activate the environment
 conda activate pytorch
-
-# Install package in development mode
 pip install -r requirements.txt
-```
-
-### Manual Setup with pip
-
-```bash
-pip install -r requirements.txt
-pip install -e .
 ```
 
 ## Usage
 
-### Using Conda Environment
+### Quick Start
 
 ```bash
-# Activate your conda environment
 conda activate pytorch
 
 # Run the complete experiment
@@ -104,26 +51,8 @@ The project runs 6 experiments comparing different model architectures on differ
 
 ### YAML Configuration
 
-Training parameters can be configured in `config.yaml`:
-
-```yaml
-training:
-  batch_size: 256
-  epochs: 200
-  learning_rate: 0.001
-  train_ratio: 0.7
-  val_ratio: 0.2
-  test_ratio: 0.1
-  dropout: 0.2
-  training_history: true
-  show_progress: true  # Set to true to see tqdm progress bars
-  early_stopping: true
-  patience: 20
-```
-
-### Programmatic Configuration
-
-You can also configure parameters in the `TrainingConfig` class in `src/pytorch_comparison/utils/config.py`:
+Training parameters can be configured in `config/config.yaml`.  
+You can also configure parameters in the `TrainingConfig` class.
 
 - `batch_size`: Batch size for training
 - `epochs`: Number of training epochs
@@ -135,7 +64,7 @@ You can also configure parameters in the `TrainingConfig` class in `src/pytorch_
 - `early_stopping`: Whether to use early stopping
 - `patience`: Patience for early stopping
 
-**Note**: YAML configuration takes precedence over default values when `config.yaml` is present.
+**Note**: YAML configuration takes precedence over default values when `config/config.yaml` is present.
 
 ## Results
 
@@ -147,6 +76,48 @@ The script provides:
 - Final summary table with all results
 - Visualizations of training progress and predictions
 
-## License
+## Project Structure
 
-This project is open source and available under the MIT License.
+```
+pytorch-comparison/
+│
+├── config/
+│   ├── config.example.yaml
+│   └── config.yaml
+│
+├── datasets/
+│   ├── temperature_inputs.csv
+│   ├── temperature_labels.csv
+│   ├── mnist_digit_inputs.csv
+│   └── mnist_digit_labels.csv
+│
+├── src/                          
+│   ├── __init__.py
+│   ├── models/
+│   │   ├── __init__.py
+│   │   ├── linear.py
+│   │   ├── conv1d.py
+│   │   ├── conv2d.py
+│   │   └── lstm.py
+│   ├── data/
+│   │   ├── __init__.py
+│   │   ├── loading.py
+│   │   └── processing.py
+│   ├── training/
+│   │   ├── __init__.py
+│   │   ├── core.py
+│   │   └── experiment.py
+│   ├── utils/
+│   │   ├── __init__.py
+│   │   ├── config.py
+│   │   ├── metrics.py
+│   │   └── helpers.py
+│   └── visualization/    
+│       ├── __init__.py
+│       ├── training.py
+│       └── predictions.py
+│
+├── main.py
+├── requirements.txt
+└── README.md
+```
