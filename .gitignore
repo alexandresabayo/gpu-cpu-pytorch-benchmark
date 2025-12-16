@@ -74,12 +74,12 @@ tmp/
 temp/
 *.tmp
 
-# Keep directory structure
-!.gitkeep
-
 # Keep example configs
 config/*.yaml
 !config/config.example.yaml
+
+# Keep directory structure
+!.gitkeep
 
 # Keep README files
 !**/README.md
