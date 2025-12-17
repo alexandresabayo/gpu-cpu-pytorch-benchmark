@@ -16,6 +16,7 @@ A comprehensive benchmarking project comparing training performance between CPU 
 ### Manual Setup with Conda
 
 ```bash
+cd pytorch-gpu-cpu-benchmark
 conda env create -n pytorch python=3.10.12
 conda activate pytorch
 pip install -r requirements.txt
@@ -26,10 +27,9 @@ pip install -r requirements.txt
 ### Quick Start
 
 ```bash
+cd pytorch-gpu-cpu-benchmark
 conda activate pytorch
-
-# Run the complete experiment
-python main.py
+python main.py # Run the complete experiment
 ```
 
 ### Run specific experiments
