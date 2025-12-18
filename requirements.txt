@@ -27,3 +27,7 @@ ipykernel
  
 # Additional utilities
 tqdm
+
+# Testing
+pytest
+pytest-cov
