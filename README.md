@@ -80,11 +80,11 @@ The script provides:
 
 Implement a true logging system using **Rich**, with the following characteristics:
 
-The logger should be a **collapsible, multi-step logger** that mimics Docker’s build output style. It should display hierarchical progress through complex workflows without overwhelming the terminal.
+The logger should be a **collapsible, multi-step logger** that mimics Docker-style build output. It should display hierarchical progress through complex workflows without overwhelming the terminal.
 
 Each step is shown as a **bold title** describing the main action. While the step is running, **indented sub-operations** display detailed logs, execution timings, warnings, and progress bars in real time.
 
-The key feature is **log collapsing**: once a step completes, all of its detailed sub-logs disappear, leaving only the main step title with the **total elapsed time right-aligned**. This creates a clean, readable output that shows detailed activity for the current step while preserving a concise summary of completed steps.
+The key feature is **log collapsing**: when a step finishes, its detailed sub-logs collapse, leaving only the main step title with the **total elapsed time displayed right-aligned**. This creates a clean, readable output that shows detailed activity for the current step while preserving a concise summary of completed steps.
 
 The logger should use consistent visual markers at the beginning of each line to convey meaning instantly:
 
@@ -94,12 +94,24 @@ The logger should use consistent visual markers at the beginning of each line to
 * `[x]` ERROR — fatal error requiring abort
 * `[?]` PROMPT — user input required
 * `[~]` RUNNING — operation in progress
-* `   ` (three spaces) INFO — neutral status messages
+* *(no marker)* INFO — neutral, informational messages
 
-In addition to terminal output, the system must automatically generate log files.
-Each run should create a dedicated log file with timestamps on every entry, stored in a configurable log directory. Log filenames should include the execution date and time because i want very conventional log files. File logs must preserve all detailed output, including sub-steps that collapse in the terminal view. 
+INFO messages are the default output and should not include any prefix marker. Their meaning should be conveyed through **indentation, placement within a step, and subtle styling** rather than explicit symbols. An INFO message may only appear under an active step; in other words, it must be part of a sub-operation.
 
-This logging style is ideal for **build systems, training pipelines, deployment scripts, pentesting tools, or any multi-phase workflow** where live feedback is needed during execution, but a clean, minimal summary is preferred once steps complete. It combines the advantages of verbose logging (visibility into current actions) with minimal visual clutter (collapsed completed steps).
+**Visual styling:** The logger should use a **minimal color scheme**, primarily white text with **bold** and **dim** styles to create visual hierarchy. INFO messages should appear as slightly dim text. Standard status messages and success indicators should avoid bright colors. However, **errors, warnings, and failures** should retain their conventional colors (red for errors, yellow/orange for warnings) so critical issues remain immediately visible.
+
+In addition to terminal output, the system must automatically generate log files. Each run should create a dedicated log file; every entry must be timestamped and stored in a configurable log directory. Log filenames should include the execution date and time for straightforward log management. File logs must preserve all detailed output, including the sub-steps that are collapsed in the terminal view.
+
+**Note:** Log files should follow the established marker convention. Do not add redundant markers like `[WARNING]` when `[!]` is already present on the same line. INFO entries may be stored with an internal log level but should not introduce additional visual prefixes.
+
+**Implementation goal:** Replace all existing `print()` statements in the code (where defined) with proper logging calls. This includes replacing or converting progress bars (e.g., `tqdm`), console prints, and other direct terminal writes to use the centralized logging system.
+
+**Technical requirements:**
+
+* The logger must be **robust against terminal window resizing**. The display should adapt gracefully if the terminal is resized multiple times during execution, without breaking the layout or losing information.
+* Sub-operations should be **indented automatically** by the logging system based on hierarchy level. Developers should not need to manually add spaces to message strings — the logger handles indentation internally.
+
+This logging style is ideal for **build systems, training pipelines, deployment scripts, pentesting tools, or any multi-phase workflow** where live feedback is needed during execution but a clean, minimal summary is preferred once steps complete. It combines the advantages of verbose logging (visibility into current actions) with minimal visual clutter (collapsed completed steps).
 
 ## Project Structure
 
