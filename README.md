@@ -16,7 +16,7 @@ A comprehensive benchmarking project comparing training performance between CPU 
 ### Manual Setup with Conda
 
 ```bash
-cd pytorch-gpu-cpu-benchmark
+cd dl-pytorch-gpu-cpu-benchmark
 conda env create -n pytorch python=3.10.12
 conda activate pytorch
 pip install -r requirements.txt
@@ -27,7 +27,7 @@ pip install -r requirements.txt
 ### Quick Start
 
 ```bash
-cd pytorch-gpu-cpu-benchmark
+cd dl-pytorch-gpu-cpu-benchmark
 conda activate pytorch
 python main.py # Run the complete experiment
 ```
@@ -75,6 +75,31 @@ The script provides:
 - Speedup calculations
 - Final summary table with all results
 - Visualizations of training progress and predictions
+
+## TODO: Implement a Proper Logging System
+
+Implement a true logging system using **Rich**, with the following characteristics:
+
+The logger should be a **collapsible, multi-step logger** that mimics Docker’s build output style. It should display hierarchical progress through complex workflows without overwhelming the terminal.
+
+Each step is shown as a **bold title** describing the main action. While the step is running, **indented sub-operations** display detailed logs, execution timings, warnings, and progress bars in real time.
+
+The key feature is **log collapsing**: once a step completes, all of its detailed sub-logs disappear, leaving only the main step title with the **total elapsed time right-aligned**. This creates a clean, readable output that shows detailed activity for the current step while preserving a concise summary of completed steps.
+
+The logger should use consistent visual markers at the beginning of each line to convey meaning instantly:
+
+* `[+]` SUCCESS — completed successfully
+* `[-]` FAILURE — failed operation
+* `[!]` WARNING — suspicious or risky condition
+* `[x]` ERROR — fatal error requiring abort
+* `[?]` PROMPT — user input required
+* `[~]` RUNNING — operation in progress
+* `   ` (three spaces) INFO — neutral status messages
+
+In addition to terminal output, the system must automatically generate log files.
+Each run should create a dedicated log file with timestamps on every entry, stored in a configurable log directory. Log filenames should include the execution date and time because i want very conventional log files. File logs must preserve all detailed output, including sub-steps that collapse in the terminal view. 
+
+This logging style is ideal for **build systems, training pipelines, deployment scripts, pentesting tools, or any multi-phase workflow** where live feedback is needed during execution, but a clean, minimal summary is preferred once steps complete. It combines the advantages of verbose logging (visibility into current actions) with minimal visual clutter (collapsed completed steps).
 
 ## Project Structure
 
