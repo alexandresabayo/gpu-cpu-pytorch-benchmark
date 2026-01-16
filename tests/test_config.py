@@ -141,10 +141,18 @@ class TestLoadConfigFromYaml:
             with tempfile.TemporaryDirectory() as tmpdir:
                 os.chdir(tmpdir)
                 
-                # This should raise UnboundLocalError due to bug in config.py
-                # when file not found (variables not initialized before except clause)
-                with pytest.raises(UnboundLocalError):
-                    training, temp, mnist = load_config_from_yaml()
+                # Should return default configs, not raise an error (bug fixed)
+                training, temp, mnist = load_config_from_yaml()
+                
+                # Verify we got valid config objects
+                assert isinstance(training, TrainingConfig)
+                assert isinstance(temp, TemperatureConfig)
+                assert isinstance(mnist, MNISTConfig)
+                
+                # Verify default values
+                assert training.epochs == 200
+                assert temp.seq_length == 84
+                assert mnist.num_classes == 10
         finally:
             os.chdir(original_cwd)
 
@@ -172,7 +180,8 @@ class TestLoadConfigFromYaml:
                     }
                 }
                 
-                with open('config.yaml', 'w') as f:
+                os.makedirs('config', exist_ok=True)
+                with open('config/config.yaml', 'w') as f:
                     yaml.dump(config_data, f)
                 
                 training, temp, mnist = load_config_from_yaml()
@@ -206,7 +215,8 @@ class TestLoadConfigFromYaml:
                     }
                 }
                 
-                with open('config.yaml', 'w') as f:
+                os.makedirs('config', exist_ok=True)
+                with open('config/config.yaml', 'w') as f:
                     yaml.dump(config_data, f)
                 
                 training, temp, mnist = load_config_from_yaml()
@@ -239,7 +249,8 @@ class TestLoadConfigFromYaml:
                     }
                 }
                 
-                with open('config.yaml', 'w') as f:
+                os.makedirs('config', exist_ok=True)
+                with open('config/config.yaml', 'w') as f:
                     yaml.dump(config_data, f)
                 
                 training, temp, mnist = load_config_from_yaml()
@@ -271,7 +282,8 @@ class TestLoadConfigFromYaml:
                     }
                 }
                 
-                with open('config.yaml', 'w') as f:
+                os.makedirs('config', exist_ok=True)
+                with open('config/config.yaml', 'w') as f:
                     yaml.dump(config_data, f)
                 
                 training, temp, mnist = load_config_from_yaml()
@@ -285,7 +297,7 @@ class TestLoadConfigFromYaml:
             os.chdir(original_cwd)
 
     def test_invalid_yaml_uses_defaults(self):
-        """Test that invalid YAML causes UnboundLocalError due to bug"""
+        """Test that defaults are used when YAML is invalid (bug fixed)"""
         import os
         original_cwd = os.getcwd()
         
@@ -294,12 +306,18 @@ class TestLoadConfigFromYaml:
                 os.chdir(tmpdir)
                 
                 # Write invalid YAML
-                with open('config.yaml', 'w') as f:
+                os.makedirs('config', exist_ok=True)
+                with open('config/config.yaml', 'w') as f:
                     f.write("{ invalid yaml: [")
                 
-                # Bug in config.py: variables not initialized before except clause
-                with pytest.raises(UnboundLocalError):
-                    training, temp, mnist = load_config_from_yaml()
+                # Should return defaults, not raise error (bug fixed)
+                training, temp, mnist = load_config_from_yaml()
+                
+                # Verify we got default configs
+                assert isinstance(training, TrainingConfig)
+                assert isinstance(temp, TemperatureConfig)
+                assert isinstance(mnist, MNISTConfig)
+                assert training.epochs == 200
         finally:
             os.chdir(original_cwd)
 
@@ -320,7 +338,8 @@ class TestLoadConfigFromYaml:
                         'mnist': {}
                     }
                 }
-                with open('config.yaml', 'w') as f:
+                os.makedirs('config', exist_ok=True)
+                with open('config/config.yaml', 'w') as f:
                     yaml.dump(config_data, f)
                 
                 result = load_config_from_yaml()
