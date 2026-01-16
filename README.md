@@ -76,7 +76,13 @@ The script provides:
 - Final summary table with all results
 - Visualizations of training progress and predictions
 
-## TODO: Implement a Proper Logging System
+## TODO: Dataset generation directly from sources
+
+Remove local CSV dependencies - Stop loading datasets from local files
+Implement dataset generation from original sources - Download and build datasets programmatically from authoritative sources (e.g., Max Planck
+Institute for weather data, Yann LeCun's server for MNIST) so any developer can reproduce the exact dataset by running the code
+
+## TODO: Implement a Proper Logging SystemS
 
 Implement a true logging system using **Rich**, with the following characteristics:
 
