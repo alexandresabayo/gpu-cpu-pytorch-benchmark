@@ -38,7 +38,7 @@ class MNISTConfig:
 def load_config_from_yaml() -> tuple[TrainingConfig, TemperatureConfig, MNISTConfig]:
     """Load configuration from YAML file for all dataclasses"""
     try:
-        with open('config.yaml', 'r') as f:
+        with open('config/config.yaml', 'r') as f:
             yaml_config = yaml.safe_load(f)
         
         # Load TrainingConfig from YAML
