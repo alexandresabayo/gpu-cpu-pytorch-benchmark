@@ -37,6 +37,11 @@ class MNISTConfig:
 
 def load_config_from_yaml() -> tuple[TrainingConfig, TemperatureConfig, MNISTConfig]:
     """Load configuration from YAML file for all dataclasses"""
+    # Default configurations
+    training = TrainingConfig()
+    temperature = TemperatureConfig()
+    mnist = MNISTConfig()
+    
     try:
         with open('config/config.yaml', 'r') as f:
             yaml_config = yaml.safe_load(f)
@@ -74,17 +79,13 @@ def load_config_from_yaml() -> tuple[TrainingConfig, TemperatureConfig, MNISTCon
             num_classes=mnist_config.get('num_classes', 10)
         )
         
-        print(f"Configuration loaded from config.yaml")
-        
-        # Return all configs as a dictionary for easy access
-        return training, temperature, mnist
+        # Don't print here - let the caller log it
         
     except FileNotFoundError:
-        print("⚠ config.yaml not found, using default configuration")
-        return training, temperature, mnist
+        pass  # Silently use defaults
     except yaml.YAMLError as e:
-        print(f"⚠ YAML parsing error in config.yaml: {e}, using default configuration")
-        return training, temperature, mnist
+        pass  # Silently use defaults  
     except Exception as e:
-        print(f"⚠ Error loading config.yaml: {e}, using default configuration")
-        return training, temperature, mnist
+        pass  # Silently use defaults
+    
+    return training, temperature, mnist
