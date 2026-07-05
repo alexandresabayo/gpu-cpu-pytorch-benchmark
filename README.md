@@ -1,22 +1,46 @@
-# PyTorch GPU vs CPU Training Comparison
+# Deep Learning experiments
+
+A comprehensive collection of deep learning experiments exploring model architectures, optimization techniques, and advanced ML concepts from fundamentals to research topics.
+
+## Structure i want to achieve
+
+- **`benchmarking/`** — Framework comparisons (PyTorch, TensorFlow, JAX) and hardware performance analysis & Hardware comparison
+- **`quantization/`** — Model quantization techniques for deployment efficiency
+- **`training/`** — Core training experiments with various architectures (MLP, CNN, LSTM, Transformers)
+- **`optimization/`** — Performance tuning, hyperparameter search, distributed training
+- **`data-centric/`** — Data quality, augmentation, and synthetic data experiments
+- **`robustness/`** — Adversarial training, uncertainty calibration, out-of-distribution detection
+- **`compression/`** — Pruning, knowledge distillation, and model compression techniques
+- **`transfer-learning/`** — Few-shot learning, domain adaptation, continual learning
+- **`curiosities/`** — Experimental deep dives into emerging concepts and research ideas
+- **`docs/`** — Comprehensive experiment catalog and methodology documentation
+
+Each experiment is self-contained, reproducible, and designed to answer specific questions about model behavior, performance trade-offs, or theoretical concepts. Results are documented with clear metrics, visualizations, and insights.
+
+For now, I've implemented GPU vs CPU comparison on regression and classification tasks during my free time. 
+I was able to observe a speedup of 13x!
+
+---
+
+# PyTorch GPU vs CPU training comparison
 
 A comprehensive benchmarking project comparing training performance between CPU and GPU for various neural network architectures on different datasets.
 
 ## Features
 
-- **Multiple Model Architectures**: MLP, 1D CNN, 2D CNN, LSTM
-- **Multiple Datasets**: Temperature time series, MNIST digits
-- **Comprehensive Benchmarking**: CPU vs GPU performance comparison
-- **Detailed Metrics**: Training time, memory usage, accuracy, loss, etc.
+- **Multiple model architectures**: MLP, 1D CNN, 2D CNN, LSTM
+- **Multiple datasets**: Temperature time series, MNIST digits
+- **Comprehensive benchmarking**: CPU vs GPU performance comparison
+- **Detailed metrics**: Training time, memory usage, accuracy, loss, etc.
 - **Visualization**: Training history plots, prediction visualizations
-- **Modular Design**: Clean separation of concerns
+- **Modular design**: Clean separation of concerns
 
 ## Requirements
 
-### Manual Setup with Conda
+### Manual setup with Conda
 
 ```bash
-cd dl-pytorch-gpu-cpu-benchmark
+cd deep-learning
 conda env create -n pytorch python=3.10.12
 conda activate pytorch
 pip install -r requirements.txt
@@ -24,15 +48,11 @@ pip install -r requirements.txt
 
 ## Usage
 
-### Quick Start
-
 ```bash
-cd dl-pytorch-gpu-cpu-benchmark
+cd deep-learning
 conda activate pytorch
 python main.py # Run the complete experiment
 ```
-
-### Run specific experiments
 
 You can modify the `main.py` script to run only specific experiments by commenting out the ones you don't need.
 
@@ -49,7 +69,7 @@ The project runs 6 experiments comparing different model architectures on differ
 
 ## Configuration
 
-### YAML Configuration
+### YAML configuration
 
 Training parameters can be configured in `config/config.yaml`.  
 You can also configure parameters in the `TrainingConfig` class.
@@ -82,7 +102,11 @@ Remove local CSV dependencies - Stop loading datasets from local files
 Implement dataset generation from original sources - Download and build datasets programmatically from authoritative sources (e.g., Max Planck
 Institute for weather data, Yann LeCun's server for MNIST) so any developer can reproduce the exact dataset by running the code
 
-## TODO: Implement a Proper Logging SystemS
+## TODO: Add CSV download functionality
+
+Add an atomatic download to export tab results as CSV files - Currently the two tabs only display/print results
+
+## TODO: Implement a proper logging system
 
 Implement a true logging system using **Rich**, with the following characteristics:
 
@@ -119,7 +143,7 @@ In addition to terminal output, the system must automatically generate log files
 
 This logging style is ideal for **build systems, training pipelines, deployment scripts, pentesting tools, or any multi-phase workflow** where live feedback is needed during execution but a clean, minimal summary is preferred once steps complete. It combines the advantages of verbose logging (visibility into current actions) with minimal visual clutter (collapsed completed steps).
 
-## Project Structure
+## Project structure for now
 
 ```
 pytorch-comparison/
