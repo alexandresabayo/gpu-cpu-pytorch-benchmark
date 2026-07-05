@@ -1,27 +1,3 @@
-# Deep Learning experiments
-
-A comprehensive collection of deep learning experiments exploring model architectures, optimization techniques, and advanced ML concepts from fundamentals to research topics.
-
-## Structure i want to achieve
-
-- **`benchmarking/`** — Framework comparisons (PyTorch, TensorFlow, JAX) and hardware performance analysis & Hardware comparison
-- **`quantization/`** — Model quantization techniques for deployment efficiency
-- **`training/`** — Core training experiments with various architectures (MLP, CNN, LSTM, Transformers)
-- **`optimization/`** — Performance tuning, hyperparameter search, distributed training
-- **`data-centric/`** — Data quality, augmentation, and synthetic data experiments
-- **`robustness/`** — Adversarial training, uncertainty calibration, out-of-distribution detection
-- **`compression/`** — Pruning, knowledge distillation, and model compression techniques
-- **`transfer-learning/`** — Few-shot learning, domain adaptation, continual learning
-- **`curiosities/`** — Experimental deep dives into emerging concepts and research ideas
-- **`docs/`** — Comprehensive experiment catalog and methodology documentation
-
-Each experiment is self-contained, reproducible, and designed to answer specific questions about model behavior, performance trade-offs, or theoretical concepts. Results are documented with clear metrics, visualizations, and insights.
-
-For now, I've implemented GPU vs CPU comparison on regression and classification tasks during my free time. 
-I was able to observe a speedup of 13x!
-
----
-
 # PyTorch GPU vs CPU training comparison
 
 A comprehensive benchmarking project comparing training performance between CPU and GPU for various neural network architectures on different datasets.
@@ -142,49 +118,3 @@ In addition to terminal output, the system must automatically generate log files
 * Sub-operations should be **indented automatically** by the logging system based on hierarchy level. Developers should not need to manually add spaces to message strings — the logger handles indentation internally.
 
 This logging style is ideal for **build systems, training pipelines, deployment scripts, pentesting tools, or any multi-phase workflow** where live feedback is needed during execution but a clean, minimal summary is preferred once steps complete. It combines the advantages of verbose logging (visibility into current actions) with minimal visual clutter (collapsed completed steps).
-
-## Project structure for now
-
-```
-pytorch-comparison/
-│
-├── config/
-│   ├── config.example.yaml
-│   └── config.yaml
-│
-├── datasets/
-│   ├── temperature_inputs.csv
-│   ├── temperature_labels.csv
-│   ├── mnist_digit_inputs.csv
-│   └── mnist_digit_labels.csv
-│
-├── src/                          
-│   ├── __init__.py
-│   ├── models/
-│   │   ├── __init__.py
-│   │   ├── linear.py
-│   │   ├── conv1d.py
-│   │   ├── conv2d.py
-│   │   └── lstm.py
-│   ├── data/
-│   │   ├── __init__.py
-│   │   ├── loading.py
-│   │   └── processing.py
-│   ├── training/
-│   │   ├── __init__.py
-│   │   ├── core.py
-│   │   └── experiment.py
-│   ├── utils/
-│   │   ├── __init__.py
-│   │   ├── config.py
-│   │   ├── metrics.py
-│   │   └── helpers.py
-│   └── visualization/    
-│       ├── __init__.py
-│       ├── training.py
-│       └── predictions.py
-│
-├── main.py
-├── requirements.txt
-└── README.md
-```
