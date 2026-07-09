@@ -59,7 +59,7 @@ def prepare_dataloaders(X: torch.Tensor, y: torch.Tensor,
     test_dataset = TensorDataset(*test_data)
     
     train_loader = DataLoader(train_dataset, config.batch_size, shuffle=True)
-    val_loader = DataLoader(val_dataset, config.batch_size, shuffle=False)
-    test_loader = DataLoader(test_dataset, config.batch_size, shuffle=False)
+    val_loader = DataLoader(val_dataset, config.batch_size, shuffle=True)
+    test_loader = DataLoader(test_dataset, config.batch_size, shuffle=True)
     
     return {'train': train_loader, 'val': val_loader, 'test': test_loader}
