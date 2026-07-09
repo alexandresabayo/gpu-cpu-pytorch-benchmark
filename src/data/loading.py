@@ -16,7 +16,7 @@ def load_as_tensor(csv_path: str, reshape: Optional[tuple] = None,
         return _load_memory_efficient(csv_path, reshape)
     else:
         # Original approach for backward compatibility
-        data = pd.read_csv(csv_path).values.astype('float32')
+        data = pd.read_csv(csv_path, header=None).values.astype('float32')
         return torch.from_numpy(data).reshape(reshape) if reshape else torch.from_numpy(data)
 
 

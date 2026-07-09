@@ -35,12 +35,25 @@ class MNISTConfig:
     width: int = 28
     num_classes: int = 10
 
-def load_config_from_yaml() -> tuple[TrainingConfig, TemperatureConfig, MNISTConfig]:
+
+@dataclass
+class DatasetConfig:
+    """Dataset configuration for loading and auto-download"""
+    dataset_dir: str = "datasets"
+    auto_download: bool = True
+    temperature_inputs: str = "datasets/temperature_inputs.csv"
+    temperature_labels: str = "datasets/temperature_labels.csv"
+    mnist_inputs: str = "datasets/mnist_digit_inputs.csv"
+    mnist_labels: str = "datasets/mnist_digit_labels.csv"
+
+
+def load_config_from_yaml() -> tuple[TrainingConfig, TemperatureConfig, MNISTConfig, DatasetConfig]:
     """Load configuration from YAML file for all dataclasses"""
     # Default configurations
     training = TrainingConfig()
     temperature = TemperatureConfig()
     mnist = MNISTConfig()
+    dataset = DatasetConfig()
     
     try:
         with open('config/config.yaml', 'r') as f:
@@ -79,6 +92,17 @@ def load_config_from_yaml() -> tuple[TrainingConfig, TemperatureConfig, MNISTCon
             num_classes=mnist_config.get('num_classes', 10)
         )
         
+        # Load DatasetConfig from YAML
+        dataset_config = yaml_config.get('datasets', {})
+        dataset = DatasetConfig(
+            dataset_dir=dataset_config.get('dataset_dir', 'datasets'),
+            auto_download=dataset_config.get('auto_download', True),
+            temperature_inputs=dataset_config.get('temperature_inputs', 'datasets/temperature_inputs.csv'),
+            temperature_labels=dataset_config.get('temperature_labels', 'datasets/temperature_labels.csv'),
+            mnist_inputs=dataset_config.get('mnist_inputs', 'datasets/mnist_digit_inputs.csv'),
+            mnist_labels=dataset_config.get('mnist_labels', 'datasets/mnist_digit_labels.csv')
+        )
+        
         # Don't print here - let the caller log it
         
     except FileNotFoundError:
@@ -88,4 +112,4 @@ def load_config_from_yaml() -> tuple[TrainingConfig, TemperatureConfig, MNISTCon
     except Exception as e:
         pass  # Silently use defaults
     
-    return training, temperature, mnist
+    return training, temperature, mnist, dataset

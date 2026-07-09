@@ -1,8 +1,8 @@
-# PyTorch GPU vs CPU training comparison
+## PyTorch GPU vs CPU training comparison
 
 A comprehensive benchmarking project comparing training performance between CPU and GPU for various neural network architectures on different datasets.
 
-## Features
+### Features
 
 - **Multiple model architectures**: MLP, 1D CNN, 2D CNN, LSTM
 - **Multiple datasets**: Temperature time series, MNIST digits
@@ -11,28 +11,21 @@ A comprehensive benchmarking project comparing training performance between CPU 
 - **Visualization**: Training history plots, prediction visualizations
 - **Modular design**: Clean separation of concerns
 
-## Requirements
+### Requirements
 
-### Manual setup with Conda
+* **conda** ([download Miniforge3](https://github.com/conda-forge/miniforge)) to create and manage the Python environment.
 
-```bash
-cd deep-learning
-conda env create -n pytorch python=3.10.12
-conda activate pytorch
-pip install -r requirements.txt
-```
+### Quickstart
 
-## Usage
-
-```bash
-cd deep-learning
-conda activate pytorch
-python main.py # Run the complete experiment
+```sh
+make install      # Create the Conda environment and install dependencies
+make dataset      # Generate/download the datasets
+make benchmark    # Run experiments
 ```
 
 You can modify the `main.py` script to run only specific experiments by commenting out the ones you don't need.
 
-## Experiments
+### Experiments
 
 The project runs 6 experiments comparing different model architectures on different datasets:
 
@@ -42,8 +35,6 @@ The project runs 6 experiments comparing different model architectures on differ
 4. **MNIST - MLP**: Multi-Layer Perceptron on MNIST digit classification
 5. **MNIST - CNN**: 2D CNN on MNIST digit classification
 6. **MNIST - LSTM**: LSTM on MNIST digit classification
-
-## Configuration
 
 ### YAML configuration
 
@@ -62,7 +53,7 @@ You can also configure parameters in the `TrainingConfig` class.
 
 **Note**: YAML configuration takes precedence over default values when `config/config.yaml` is present.
 
-## Results
+### Results
 
 The script provides:
 
@@ -72,17 +63,11 @@ The script provides:
 - Final summary table with all results
 - Visualizations of training progress and predictions
 
-## TODO: Dataset generation directly from sources
-
-Remove local CSV dependencies - Stop loading datasets from local files
-Implement dataset generation from original sources - Download and build datasets programmatically from authoritative sources (e.g., Max Planck
-Institute for weather data, Yann LeCun's server for MNIST) so any developer can reproduce the exact dataset by running the code
-
-## TODO: Add CSV download functionality
+### TODO: Add CSV download functionality
 
 Add an atomatic download to export tab results as CSV files - Currently the two tabs only display/print results
 
-## TODO: Implement a proper logging system
+### TODO: Implement a proper logging system
 
 Implement a true logging system using **Rich**, with the following characteristics:
 

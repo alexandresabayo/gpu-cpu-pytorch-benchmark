@@ -10,7 +10,8 @@ import torch
 import copy
 from datetime import datetime
 from src.models import LinearBased, Conv1dBased, Conv2dBased, LSTMBased
-from src.data import load_as_tensor, prepare_dataloaders
+from src.data import load_as_tensor, prepare_dataloaders, ensure_datasets_exist
+from src.data.generation import cleanup_intermediate_files
 from src.training import run_experiment
 from src.utils import load_config_from_yaml
 from src.visualization import visualize_predictions
@@ -29,14 +30,21 @@ def main():
     print(f'Run timestamp: {run_timestamp}')
     
     results = []
-    config, temp, mnist = load_config_from_yaml()
+    config, temp, mnist, dataset_config = load_config_from_yaml()
+
+    # Ensure datasets exist, downloading from raw sources if needed
+    dataset_dir = dataset_config.dataset_dir if dataset_config else "datasets"
+    dataset_paths = ensure_datasets_exist(dataset_dir, auto_download=dataset_config.auto_download if dataset_config else True)
+    
+    # Clean up intermediate download files
+    cleanup_intermediate_files(dataset_dir)
 
     # Load datasets with memory efficiency
     print("Loading datasets... ", end='')
-    X_temp = load_as_tensor('datasets/temperature_inputs.csv', (-1, 84, 1))
-    y_temp = load_as_tensor('datasets/temperature_labels.csv')
-    X_mnist = load_as_tensor('datasets/mnist_digit_inputs.csv', (-1, 1, 28, 28))
-    y_mnist = load_as_tensor('datasets/mnist_digit_labels.csv')
+    X_temp = load_as_tensor(dataset_paths['temperature_inputs'], (-1, 84, 1))
+    y_temp = load_as_tensor(dataset_paths['temperature_labels'])
+    X_mnist = load_as_tensor(dataset_paths['mnist_inputs'], (-1, 1, 28, 28))
+    y_mnist = load_as_tensor(dataset_paths['mnist_labels'])
     print("Done!")
 
     # Define experiments configuration
