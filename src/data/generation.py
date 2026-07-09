@@ -6,20 +6,20 @@ sources, so no pre-processed local CSV files are required.
 Supported datasets:
 - MNIST: downloaded from Yann LeCun's server via torchvision. Both the
   train and test splits are combined, since nothing about this module's
-  usage depends on the original train/test boundary -- that split is left
+  usage depends on the original train/test boundary; that split is left
   for whoever consumes the CSV to make. Sample count defaults to the full
   70,000 available, not just the 60,000-image train split.
 - Temperature: Jena Climate 2009-2016 dataset from TensorFlow. The raw
   data is recorded every 10 minutes, but the windows this module produces
   are labeled in 2-hour steps (2h, 4h, ..., 168h for inputs; 170h, ...,
   192h for labels), so the series is decimated to 2-hour resolution
-  *before* windowing -- see `download_jena_climate_csv` for why building
+  before windowing; see `download_jena_climate_csv` for why building
   windows straight from the 10-minute rows would be wrong. Because of that
   resolution change, the number of available windows (~34,951) is much
   smaller than the raw row count would suggest.
 
 Neither generator imposes a sample cap below what the source data
-supports by default -- both accept an optional argument to request fewer
+supports by default; both accept an optional argument to request fewer
 samples, but leaving it unset returns everything available.
 """
 
@@ -28,8 +28,10 @@ import urllib.request
 import zipfile
 from pathlib import Path
 from typing import Tuple, Optional
+import io
 import time
 import shutil
+import contextlib
 
 import numpy as np
 import pandas as pd
@@ -50,7 +52,7 @@ def download_mnist_csv(
     Args:
         output_dir: Directory to save CSV files (default: "datasets")
         num_samples: Number of samples to extract. If None (default), ALL
-            available samples are used -- 70,000 total (60,000 train +
+            available samples are used; 70,000 total (60,000 train +
             10,000 test). Pass an int to cap it lower if you want.
         force_download: If True, re-download even if files exist
 
@@ -83,20 +85,23 @@ def download_mnist_csv(
     print("Downloading MNIST dataset (train + test splits)...")
     start_time = time.time()
 
-    # Download both splits so we can offer the full 70,000 samples instead
-    # of being capped at the 60,000-image train split.
-    train_data = MNIST(
-        root=str(output_dir / ".mnist_cache"),
-        train=True,
-        download=True,
-        transform=ToTensor()
-    )
-    test_data = MNIST(
-        root=str(output_dir / ".mnist_cache"),
-        train=False,
-        download=True,
-        transform=ToTensor()
-    )
+    # torchvision uses tqdm internally for the download bar, which writes
+    # to stderr; suppress it here.
+    with contextlib.redirect_stderr(io.StringIO()):
+        train_data = MNIST(
+            root=str(output_dir / ".mnist_cache"),
+            train=True,
+            download=True,
+            transform=ToTensor()
+        )
+        print("Train split ready.")
+        test_data = MNIST(
+            root=str(output_dir / ".mnist_cache"),
+            train=False,
+            download=True,
+            transform=ToTensor()
+        )
+        print("Test split ready.")
 
     all_images = torch.cat([train_data.data, test_data.data], dim=0).numpy()
     all_labels = torch.cat([train_data.targets, test_data.targets], dim=0).numpy()
@@ -118,15 +123,15 @@ def download_mnist_csv(
     # Save inputs CSV
     inputs_df = pd.DataFrame(images_flat)
     inputs_df.to_csv(inputs_path, index=False, header=False)
-    print(f"Saved MNIST inputs: {inputs_path} ({images_flat.shape[0]} samples, {images_flat.shape[1]} features)")
+    print(f"\nSaved MNIST inputs: {inputs_path} ({images_flat.shape[0]} samples, {images_flat.shape[1]} features)")
 
     # Save labels CSV with header
     labels_df = pd.DataFrame(labels_arr, columns=['label'])
-    labels_df.to_csv(labels_path, index=False)
+    labels_df.to_csv(labels_path, index=False, header=False)
     print(f"Saved MNIST labels: {labels_path} ({labels_arr.shape[0]} samples)")
 
     elapsed = time.time() - start_time
-    print(f"MNIST download and CSV generation completed in {elapsed:.2f}s")
+    print(f"MNIST download and CSV generation completed in {elapsed:.2f}s\n")
 
     return str(inputs_path), str(labels_path)
 
@@ -231,7 +236,7 @@ def download_jena_climate_csv(
 
     # The column labels this function produces (2h, 4h, ..., 168h / 170h,
     # ..., 192h) describe a series sampled every 2 hours, so the raw
-    # 10-minute data is decimated to that resolution before windowing --
+    # 10-minute data is decimated to that resolution before windowing;
     # otherwise each "84-step" window would span 14 real hours instead of
     # the 168 hours the column names claim.
     # 2 hours / 10 minutes = 12, so every 12th raw reading is kept.
@@ -245,10 +250,11 @@ def download_jena_climate_csv(
         gaps = timestamps.diff().dropna()
         irregular = int((gaps != pd.Timedelta(minutes=10)).sum())
         if irregular:
-            print(f"Warning: {irregular} raw timestamp gaps are not exactly "
-                  f"10 minutes apart. 2-hour decimation is positional, so "
-                  f"windows spanning these points may drift from true 2-hour "
-                  f"steps.")
+            print(
+                f"Warning: {irregular} raw timestamp gaps are not exactly 10 minutes apart.\n"
+                f"  2-hour decimation is positional, so windows spanning these points\n"
+                f"  may drift from true 2-hour steps."
+            )
 
     # Start decimating from the first row that lands on a clean 2-hour
     # clock boundary (e.g. 00:00, 02:00, ...) rather than index 0, so the
@@ -281,7 +287,7 @@ def download_jena_climate_csv(
     print(f"Available windows at 2-hour resolution: {total_available}")
 
     if target_samples is None:
-        # No cap -- use every available window.
+        # No cap; use every available window.
         target_samples = total_available
     elif target_samples > total_available:
         raise ValueError(
@@ -311,16 +317,16 @@ def download_jena_climate_csv(
 
     # Save inputs CSV
     inputs_df = pd.DataFrame(inputs_array, columns=input_columns)
-    inputs_df.to_csv(inputs_path, index=False)
-    print(f"Saved temperature inputs: {inputs_path} ({inputs_array.shape[0]} samples, {inputs_array.shape[1]} features)")
+    inputs_df.to_csv(inputs_path, index=False, header=False)
+    print(f"\nSaved temperature inputs: {inputs_path} ({inputs_array.shape[0]} samples, {inputs_array.shape[1]} features)")
 
     # Save labels CSV
     labels_df = pd.DataFrame(labels_array, columns=label_columns)
-    labels_df.to_csv(labels_path, index=False)
+    labels_df.to_csv(labels_path, index=False, header=False)
     print(f"Saved temperature labels: {labels_path} ({labels_array.shape[0]} samples, {labels_array.shape[1]} features)")
 
     elapsed = time.time() - start_time
-    print(f"Jena Climate download and CSV generation completed in {elapsed:.2f}s")
+    print(f"Jena Climate download and CSV generation completed in {elapsed:.2f}s\n")
 
     return str(inputs_path), str(labels_path)
 
@@ -351,7 +357,7 @@ def generate_all_datasets(
     """
     results = {}
 
-    # Generate MNIST -- all 70,000 samples (train + test)
+    # Generate MNIST; all 70,000 samples (train + test)
     print("\n[1/2] Generating MNIST (full 70,000 samples)...")
     mnist_inputs, mnist_labels = download_mnist_csv(
         output_dir, num_samples=None, force_download=force_download
@@ -359,9 +365,9 @@ def generate_all_datasets(
     results['mnist_inputs'] = mnist_inputs
     results['mnist_labels'] = mnist_labels
 
-    # Generate Temperature (Jena Climate) -- all windows at 2-hour
+    # Generate Temperature (Jena Climate); all windows at 2-hour
     # resolution (~34,951), not the raw 10-minute row count.
-    print("\n[2/2] Generating Temperature (Jena Climate, all available windows)...")
+    print("[2/2] Generating Temperature (Jena Climate, all available windows)...")
     temp_inputs, temp_labels = download_jena_climate_csv(
         output_dir, target_samples=None, force_download=force_download
     )
@@ -495,4 +501,4 @@ def cleanup_intermediate_files(output_dir: str = "datasets") -> None:
     jena_zip = output_dir / "jena_climate_2009_2016.csv.zip"
     if jena_zip.exists():
         jena_zip.unlink()
-        print(f"Removed {jena_zip}")
+        print(f"Removed {jena_zip}\n")
