@@ -1,0 +1,5 @@
+# Language stats
+Makefile linguist-detectable=false
+
+# Line endings
+* text=auto eol=lf
