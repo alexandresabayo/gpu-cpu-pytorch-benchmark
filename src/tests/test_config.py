@@ -4,7 +4,7 @@ import pytest
 import tempfile
 import yaml
 from pathlib import Path
-from utils.config import TrainingConfig, TemperatureConfig, MNISTConfig, load_config_from_yaml
+from src.utils.config import TrainingConfig, TemperatureConfig, MNISTConfig, load_config_from_yaml
 
 
 class TestTrainingConfig:

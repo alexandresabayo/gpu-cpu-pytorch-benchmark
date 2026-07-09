@@ -4,7 +4,7 @@ import pytest
 import torch
 import numpy as np
 from unittest.mock import Mock
-from utils.metrics import (
+from src.utils.metrics import (
     predict_batch, 
     calculate_regression_metrics, 
     calculate_classification_metrics,

@@ -3,10 +3,10 @@
 import pytest
 import torch
 import torch.nn as nn
-from models.linear import LinearBased
-from models.conv1d import Conv1dBased
-from models.conv2d import Conv2dBased
-from models.lstm import LSTMBased
+from src.models.linear import LinearBased
+from src.models.conv1d import Conv1dBased
+from src.models.conv2d import Conv2dBased
+from src.models.lstm import LSTMBased
 
 
 class TestLinearBased:
