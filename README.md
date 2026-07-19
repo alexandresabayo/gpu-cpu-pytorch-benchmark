@@ -19,7 +19,7 @@ A comprehensive benchmarking project comparing training performance between CPU 
 
 ```sh
 make install      # Create the Conda environment and install dependencies
-make dataset      # Generate/download the datasets
+make data         # Generate/download the datasets
 make benchmark    # Run experiments
 ```
 
