@@ -65,7 +65,27 @@ The script provides:
 
 ### TODO: Add CSV download functionality
 
-Add an atomatic download to export tab results as CSV files - Currently the two tabs only display/print results
+Add automatic download to export tab results as CSV files — currently the two tabs only display/print results.
+
+Each exported row must be a **flat key–value mapping**: one key maps to exactly one value (no nested objects, no lists as values). Keys are always strings; values are `int` or `float` whenever the underlying data is numeric, and `string` otherwise (e.g. `name`).
+
+This means metrics currently nested like `cpu_metrics['test']['accuracy']` should be flattened into their own top-level keys before export, e.g.:
+
+| key | value |
+|---|---|
+| `name` | `"5. MNIST - CNN"` |
+| `n_params` | `220490` |
+| `cpu_time` | `70.36` |
+| `gpu_time` | `9.74` |
+| `test_loss` | `0.1975` |
+| `test_accuracy` | `0.9441` |
+| `test_f1_macro` | `0.9431` |
+| `test_auc_roc` | `0.9971` |
+
+Not:
+```json
+{"cpu_metrics": {"test": {"accuracy": 0.9441, "loss": 0.1975}}}
+```
 
 ### TODO: Implement a proper logging system
 
