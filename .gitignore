@@ -35,16 +35,8 @@ logs/
 lightning_logs/
 tensorboard/
 
-# Datasets (but keep structure)
-datasets/*.csv
-datasets/*.txt
-datasets/*.npy
-datasets/*.npz
-datasets/*.json
-!datasets/.gitkeep
-!datasets/README.md
-
-# Results and outputs
+# Outputs
+datasets/
 results/
 outputs/
 checkpoints/
