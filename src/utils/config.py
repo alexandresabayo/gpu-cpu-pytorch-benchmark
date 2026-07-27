@@ -2,6 +2,7 @@
 
 import yaml
 from dataclasses import dataclass
+from ..richlog import StepHandle
 
 # Define dataclasses first to avoid circular references
 @dataclass
@@ -16,7 +17,6 @@ class TrainingConfig:
     test_ratio: float = 0.1
     dropout: float = 0.2
     training_history: bool = True
-    show_progress: bool = False
     early_stopping : bool = True
     patience: int = 20
     
@@ -47,8 +47,15 @@ class DatasetConfig:
     mnist_labels: str = "datasets/mnist_digit_labels.csv"
 
 
-def load_config_from_yaml() -> tuple[TrainingConfig, TemperatureConfig, MNISTConfig, DatasetConfig]:
-    """Load configuration from YAML file for all dataclasses"""
+def load_config_from_yaml(step: StepHandle) -> tuple[TrainingConfig, TemperatureConfig, MNISTConfig, DatasetConfig]:
+    """Load configuration from YAML file for all dataclasses.
+
+    Args:
+        step: the open StepHandle to log warnings into if config.yaml is
+            missing, invalid, or fails to load for any other reason.
+            Defaults are used in all three cases; only the visibility of
+            the fallback has changed, not the fallback itself.
+    """
     # Default configurations
     training = TrainingConfig()
     temperature = TemperatureConfig()
@@ -70,7 +77,6 @@ def load_config_from_yaml() -> tuple[TrainingConfig, TemperatureConfig, MNISTCon
             test_ratio=training_config.get('test_ratio', 0.1),
             dropout=training_config.get('dropout', 0.2),
             training_history=training_config.get('training_history', True),
-            show_progress=training_config.get('show_progress', False),
             early_stopping=training_config.get('early_stopping', True),
             patience=training_config.get('patience', 20)
         )
@@ -103,13 +109,13 @@ def load_config_from_yaml() -> tuple[TrainingConfig, TemperatureConfig, MNISTCon
             mnist_labels=dataset_config.get('mnist_labels', 'datasets/mnist_digit_labels.csv')
         )
         
-        # Don't print here - let the caller log it
-        
+        step.info("loaded config/config.yaml")
+
     except FileNotFoundError:
-        pass  # Silently use defaults
+        step.warn("config/config.yaml not found, using default configuration")
     except yaml.YAMLError as e:
-        pass  # Silently use defaults  
+        step.warn(f"config/config.yaml is invalid YAML ({e}), using default configuration")
     except Exception as e:
-        pass  # Silently use defaults
-    
+        step.warn(f"failed to load config/config.yaml ({e}), using default configuration")
+
     return training, temperature, mnist, dataset

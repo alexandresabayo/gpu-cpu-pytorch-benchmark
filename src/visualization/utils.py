@@ -3,12 +3,20 @@
 from pathlib import Path
 from datetime import datetime
 from typing import Optional
+from rich.padding import Padding
+from ..richlog.core import INDENT
+
 import re
 
-def save_plot(fig, experiment_name: str, filename: str, save_dir: str = 'results', run_timestamp: Optional[str] = None) -> None:
+from ..richlog import StepHandle
+
+
+def save_plot(step: StepHandle, fig, experiment_name: str, filename: str,
+              save_dir: str = 'results', run_timestamp: Optional[str] = None) -> None:
     """Save plot as PNG file in organized directory structure
     
     Args:
+        step: open StepHandle to log the save confirmation into.
         fig: Matplotlib figure to save
         experiment_name: Name of the experiment
         filename: Filename for the plot (e.g., 'training_history.png')
@@ -37,4 +45,9 @@ def save_plot(fig, experiment_name: str, filename: str, save_dir: str = 'results
     filepath = experiment_dir / filename
     fig.savefig(filepath, dpi=300, bbox_inches='tight')
     
-    print(f"✓ Saved plot: {filepath}")
+    if "prediction" in filename:
+        message = f"prediction plot showing model outputs vs actual values:\n    {filepath}"
+    else: 
+        message = f"saved plot:\n    {filepath}"
+
+    step.block(Padding(message, (0, 0, 0, len(INDENT) * 3), style="dim"))

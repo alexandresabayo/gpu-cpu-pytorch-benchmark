@@ -49,6 +49,7 @@ results/
 outputs/
 checkpoints/
 saved_models/
+logs/
 
 # Visualizations
 *.png

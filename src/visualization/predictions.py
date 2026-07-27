@@ -5,9 +5,11 @@ import numpy as np
 import torch
 from typing import Tuple, Optional
 from .utils import save_plot
+from ..richlog import StepHandle
 
 
-def visualize_predictions(experiment_name: str, model: torch.nn.Module, data_loader: torch.utils.data.DataLoader, 
+def visualize_predictions(step: StepHandle, experiment_name: str, model: torch.nn.Module,
+                          data_loader: torch.utils.data.DataLoader,
                           num_samples: int = 3, device: torch.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu'),
                           save_dir: str = 'results', run_timestamp: Optional[str] = None) -> Tuple[np.ndarray, np.ndarray]:
     """Visualize model predictions and save as PNG files"""
@@ -53,7 +55,7 @@ def visualize_predictions(experiment_name: str, model: torch.nn.Module, data_loa
     
     # Save the plot
     if fig is not None:
-        save_plot(fig, experiment_name, 'predictions.png', save_dir, run_timestamp)
+        save_plot(step, fig, experiment_name, 'predictions.png', save_dir, run_timestamp)
         plt.close(fig)
     
     return predictions, targets

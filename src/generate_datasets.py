@@ -17,6 +17,8 @@ Usage:
 import argparse
 from pathlib import Path
 
+from src.richlog import Logger
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -49,7 +51,7 @@ def main():
         help='Keep raw download artifacts (.mnist_cache/, jena_climate_2009_2016.csv, .zip)'
     )
     args = parser.parse_args()
-    
+
     # Import after argument parsing
     from src.data.generation import (
         download_mnist_csv,
@@ -57,35 +59,28 @@ def main():
         generate_all_datasets,
         cleanup_intermediate_files,
     )
-    
+
     output_dir = Path(args.output)
     output_dir.mkdir(parents=True, exist_ok=True)
-    
-    print("="*80)
-    print("Dataset Generation from Raw Sources")
-    print("="*80)
-    print()
-    
-    if args.mnist and not args.temperature:
-        print("Generating MNIST dataset...")
-        download_mnist_csv(output_dir, force_download=args.force)
-        print("\nMNIST generation complete!")
-    elif args.temperature and not args.mnist:
-        print("Generating Temperature dataset (Jena Climate)...")
-        download_jena_climate_csv(output_dir, force_download=args.force)
-        print("\nTemperature generation complete!")
-    else:
-        print("Generating all datasets...")
-        generate_all_datasets(output_dir, force_download=args.force)
-    
-    if not args.keep_intermediate:
-        print("\nCleaning up intermediate download artifacts...")
-        cleanup_intermediate_files(output_dir)
-    
-    print("\n" + "="*80)
-    print("Dataset generation complete!")
-    print(f"Files saved to: {output_dir.absolute()}")
-    print("="*80)
+
+    # This is a standalone CLI entrypoint (separate from main.py's run), so
+    # it gets its own Logger and its own logs/run_<timestamp>.log file.
+    with Logger(log_dir="logs") as log:
+        with log.step("Generate datasets") as step:
+            if args.mnist and not args.temperature:
+                with step.child("Generating MNIST") as sub:
+                    download_mnist_csv(sub, output_dir, force_download=args.force)
+            elif args.temperature and not args.mnist:
+                with step.child("Generating Temperature (Jena Climate)") as sub:
+                    download_jena_climate_csv(sub, output_dir, force_download=args.force)
+            else:
+                generate_all_datasets(step, output_dir, force_download=args.force)
+
+            if not args.keep_intermediate:
+                with step.child("Cleaning up intermediate files") as sub:
+                    cleanup_intermediate_files(sub, output_dir)
+
+            step.info(f"files saved to {output_dir.absolute()}")
 
 
 if __name__ == "__main__":

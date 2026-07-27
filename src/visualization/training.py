@@ -5,10 +5,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 from typing import Dict, List, Optional
 from pathlib import Path
+from rich.text import Text
+from rich.padding import Padding
+from typing import Union
 from .utils import save_plot
+from ..richlog import StepHandle, Logger
+from ..richlog.core import INDENT
 
 
-def plot_training_history(history: Dict[str, List], training_time: float, experiment_name: Optional[str] = None, save_dir: str = 'results', run_timestamp: Optional[str] = None) -> None:
+def plot_training_history(step: StepHandle, history: Dict[str, List], training_time: float,
+                          experiment_name: Optional[str] = None, save_dir: str = 'results',
+                          run_timestamp: Optional[str] = None) -> None:
     """Plot training history and save as PNG file"""
     fig, ax = plt.subplots(figsize=(8, 4))
     
@@ -46,24 +53,37 @@ def plot_training_history(history: Dict[str, List], training_time: float, experi
     
     # Save plot instead of showing it
     if experiment_name:
-        save_plot(fig, experiment_name, f'training_history_{int(training_time)}s.png', save_dir, run_timestamp)
+        save_plot(step, fig, experiment_name, f'training_history_{int(training_time)}s.png', save_dir, run_timestamp)
     else:
         plt.show()
     
     plt.close(fig)
 
 
-def print_metrics_summary(metrics_dict: Dict[str, Dict[str, float]]) -> None:
-    """Print metrics table with clear structure and formatting"""
-    
+def print_metrics_summary(step: Union[StepHandle, Logger], metrics_dict: Dict[str, Dict[str, float]]) -> None:
+    """Log a metrics table as one permanent block (.block()), so it
+    survives in the terminal even after the step it was computed under has
+    already closed and collapsed.
+
+    Accepts either a StepHandle (the usual mid-run case) or the bare Logger
+    (e.g. main.py's final summary, printed after every step has closed) —
+    both expose the same .block() method.
+    """
     metrics_dict = {k.lower(): v for k, v in metrics_dict.items()}
     dataset_splits = list(metrics_dict.keys())
     metrics = next(iter(metrics_dict.values()))
-    
-    for metric in metrics:
+
+    lines = Text()
+    for i, metric in enumerate(metrics):
         parts = []
         for split in dataset_splits:
             value = metrics_dict[split][metric]
             parts.append(f'{split}={value:.4f}')
-        
-        print(f'  {metric+":":<12}{" | ".join(parts)}')
+
+        if i > 0:
+            lines.append("\n")
+        lines.append(f'  {metric + ":":<12}', style="bold")
+        lines.append(" | ".join(parts), style="dim")
+
+    padded_lines = Padding(lines, (0, 0, 0, len(INDENT) * 3))
+    step.block(padded_lines)

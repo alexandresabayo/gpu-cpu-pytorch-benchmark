@@ -21,6 +21,12 @@ Supported datasets:
 Neither generator imposes a sample cap below what the source data
 supports by default; both accept an optional argument to request fewer
 samples, but leaving it unset returns everything available.
+
+Every function below takes a `step: StepHandle` as its first argument.
+The caller is expected to already have an open Step (or Step.child()) that
+these functions log into; none of these functions open their own top-level
+step, except generate_all_datasets/get_dataset_paths/ensure_datasets_exist
+which open *nested* child steps for the two datasets they manage.
 """
 
 import os
@@ -37,8 +43,11 @@ import numpy as np
 import pandas as pd
 import torch
 
+from ..richlog import StepHandle
+
 
 def download_mnist_csv(
+    step: StepHandle,
     output_dir: str = "datasets",
     num_samples: Optional[int] = None,
     force_download: bool = False
@@ -50,6 +59,8 @@ def download_mnist_csv(
     files matching the expected format.
 
     Args:
+        step: open StepHandle to log into (e.g. a "Generating MNIST" child
+            step opened by the caller).
         output_dir: Directory to save CSV files (default: "datasets")
         num_samples: Number of samples to extract. If None (default), ALL
             available samples are used; 70,000 total (60,000 train +
@@ -66,6 +77,7 @@ def download_mnist_csv(
         from torchvision.datasets import MNIST
         from torchvision.transforms import ToTensor
     except ImportError:
+        step.error("torchvision is not installed; required for MNIST download")
         raise ImportError(
             "torchvision is required for MNIST download. "
             "Install it with: pip install torchvision"
@@ -79,14 +91,14 @@ def download_mnist_csv(
 
     # Check if files already exist
     if inputs_path.exists() and labels_path.exists() and not force_download:
-        print(f"MNIST CSV files already exist in {output_dir}")
+        step.info(f"MNIST CSV files already exist in {output_dir}")
         return str(inputs_path), str(labels_path)
 
-    print("Downloading MNIST dataset (train + test splits)...")
     start_time = time.time()
 
     # torchvision uses tqdm internally for the download bar, which writes
-    # to stderr; suppress it here.
+    # to stderr; suppressed here rather than surfaced, since byte-level
+    # download progress isn't part of this logger's scope.
     with contextlib.redirect_stderr(io.StringIO()):
         train_data = MNIST(
             root=str(output_dir / ".mnist_cache"),
@@ -94,20 +106,20 @@ def download_mnist_csv(
             download=True,
             transform=ToTensor()
         )
-        print("Train split ready.")
+        step.info("train split ready")
         test_data = MNIST(
             root=str(output_dir / ".mnist_cache"),
             train=False,
             download=True,
             transform=ToTensor()
         )
-        print("Test split ready.")
+        step.info("test split ready")
 
     all_images = torch.cat([train_data.data, test_data.data], dim=0).numpy()
     all_labels = torch.cat([train_data.targets, test_data.targets], dim=0).numpy()
 
     total_available = all_images.shape[0]  # 70,000
-    print(f"Total available MNIST samples: {total_available}")
+    step.info(f"{total_available} total samples available")
 
     if num_samples is None:
         num_samples = total_available
@@ -123,20 +135,21 @@ def download_mnist_csv(
     # Save inputs CSV
     inputs_df = pd.DataFrame(images_flat)
     inputs_df.to_csv(inputs_path, index=False, header=False)
-    print(f"\nSaved MNIST inputs: {inputs_path} ({images_flat.shape[0]} samples, {images_flat.shape[1]} features)")
+    step.info(f"saved inputs: {inputs_path} ({images_flat.shape[0]} samples, {images_flat.shape[1]} features)")
 
     # Save labels CSV with header
     labels_df = pd.DataFrame(labels_arr, columns=['label'])
     labels_df.to_csv(labels_path, index=False, header=False)
-    print(f"Saved MNIST labels: {labels_path} ({labels_arr.shape[0]} samples)")
+    step.info(f"saved labels: {labels_path} ({labels_arr.shape[0]} samples)")
 
     elapsed = time.time() - start_time
-    print(f"MNIST download and CSV generation completed in {elapsed:.2f}s\n")
+    step.info(f"completed in {elapsed:.2f}s")
 
     return str(inputs_path), str(labels_path)
 
 
 def download_jena_climate_csv(
+    step: StepHandle,
     output_dir: str = "datasets",
     force_download: bool = False,
     target_samples: Optional[int] = None
@@ -153,6 +166,8 @@ def download_jena_climate_csv(
     and creates windows to match the expected CSV shape.
 
     Args:
+        step: open StepHandle to log into (e.g. a "Generating Temperature
+            (Jena Climate)" child step opened by the caller).
         output_dir: Directory to save CSV files (default: "datasets")
         force_download: If True, re-download even if files exist
         target_samples: Number of sliding-window samples to generate. If
@@ -175,10 +190,9 @@ def download_jena_climate_csv(
 
     # Check if files already exist
     if inputs_path.exists() and labels_path.exists() and not force_download:
-        print(f"Jena Climate CSV files already exist in {output_dir}")
+        step.info(f"Jena Climate CSV files already exist in {output_dir}")
         return str(inputs_path), str(labels_path)
 
-    print("Downloading Jena Climate dataset...")
     start_time = time.time()
 
     # URL from TensorFlow datasets
@@ -189,15 +203,15 @@ def download_jena_climate_csv(
     # Download if needed
     if not csv_path.exists() or force_download:
         if not zip_path.exists() or force_download:
-            print(f"Downloading from {url}...")
+            step.info(f"downloading from {url}")
             urllib.request.urlretrieve(url, zip_path)
 
-        print("Extracting ZIP file...")
+        step.info("extracting zip file")
         with zipfile.ZipFile(zip_path, 'r') as z:
             z.extractall(output_dir)
 
     # Load the dataset
-    print("Loading climate data...")
+    step.info("loading climate data")
     df = pd.read_csv(csv_path)
 
     # Extract temperature column (T is 2m temperature in Celsius)
@@ -209,6 +223,7 @@ def download_jena_climate_csv(
                 temp_column = col
                 break
         else:
+            step.error(f"temperature column not found; available: {list(df.columns)}")
             raise ValueError(f"Temperature column not found. Available: {list(df.columns)}")
 
     temp_series = df[temp_column]
@@ -226,13 +241,13 @@ def download_jena_climate_csv(
     # Interpolate missing values in temperature data
     missing_count = temp_series.isna().sum()
     if missing_count > 0:
-        print(f"Found {missing_count} missing temperature values, interpolating...")
+        step.info(f"found {missing_count} missing temperature values, interpolating")
         temp_series = temp_series.interpolate(method='linear')
         # Forward fill any remaining NaN at the start, backward fill at the end
         temp_series = temp_series.ffill().bfill()
 
     temp_data_raw = temp_series.values.astype('float32')
-    print(f"Loaded {len(temp_data_raw)} raw temperature measurements (10-min resolution)")
+    step.info(f"loaded {len(temp_data_raw)} raw temperature measurements (10-min resolution)")
 
     # The column labels this function produces (2h, 4h, ..., 168h / 170h,
     # ..., 192h) describe a series sampled every 2 hours, so the raw
@@ -250,10 +265,9 @@ def download_jena_climate_csv(
         gaps = timestamps.diff().dropna()
         irregular = int((gaps != pd.Timedelta(minutes=10)).sum())
         if irregular:
-            print(
-                f"Warning: {irregular} raw timestamp gaps are not exactly 10 minutes apart.\n"
-                f"  2-hour decimation is positional, so windows spanning these points\n"
-                f"  may drift from true 2-hour steps."
+            step.warn(
+                f"{irregular} raw timestamp gaps are not exactly 10 minutes apart; "
+                f"2-hour decimation is positional, so windows spanning these points may drift"
             )
 
     # Start decimating from the first row that lands on a clean 2-hour
@@ -269,8 +283,10 @@ def download_jena_climate_csv(
                 break
 
     temp_data = temp_data_raw[offset::RESAMPLE_STEP]
-    print(f"Resampled to 2-hour resolution: {len(temp_data)} measurements "
-          f"(every {RESAMPLE_STEP}th raw reading, starting at offset {offset})")
+    step.info(
+        f"resampled to 2-hour resolution: {len(temp_data)} measurements "
+        f"(every {RESAMPLE_STEP}th raw reading, starting at offset {offset})"
+    )
 
     # Create column names matching the expected CSV format
     # Input: 2h, 4h, 6h, ..., 168h (84 timesteps)
@@ -284,18 +300,22 @@ def download_jena_climate_csv(
     window_size = seq_length + pred_length
 
     total_available = len(temp_data) - window_size + 1
-    print(f"Available windows at 2-hour resolution: {total_available}")
+    step.info(f"available windows at 2-hour resolution: {total_available}")
 
     if target_samples is None:
         # No cap; use every available window.
         target_samples = total_available
     elif target_samples > total_available:
+        step.error(
+            f"not enough data to generate {target_samples} samples; "
+            f"only {total_available} windows available"
+        )
         raise ValueError(
             f"Not enough data to generate {target_samples} samples. "
             f"Only {total_available} windows available from the raw data."
         )
 
-    print(f"Creating sliding windows (input: {seq_length}, predict: {pred_length})...")
+    step.info(f"creating sliding windows (input: {seq_length}, predict: {pred_length})")
 
     # Pre-allocate arrays for efficiency
     inputs_array = np.zeros((target_samples, seq_length), dtype='float32')
@@ -313,32 +333,37 @@ def download_jena_climate_csv(
             inputs_array[idx] = temp_data[i:i+seq_length]
             labels_array[idx] = temp_data[i+seq_length:i+window_size]
 
-    print(f"Generated {len(inputs_array)} input samples and {len(labels_array)} label samples")
+    step.info(f"generated {len(inputs_array)} input samples and {len(labels_array)} label samples")
 
     # Save inputs CSV
     inputs_df = pd.DataFrame(inputs_array, columns=input_columns)
     inputs_df.to_csv(inputs_path, index=False, header=False)
-    print(f"\nSaved temperature inputs: {inputs_path} ({inputs_array.shape[0]} samples, {inputs_array.shape[1]} features)")
+    step.info(f"saved inputs: {inputs_path} ({inputs_array.shape[0]} samples, {inputs_array.shape[1]} features)")
 
     # Save labels CSV
     labels_df = pd.DataFrame(labels_array, columns=label_columns)
     labels_df.to_csv(labels_path, index=False, header=False)
-    print(f"Saved temperature labels: {labels_path} ({labels_array.shape[0]} samples, {labels_array.shape[1]} features)")
+    step.info(f"saved labels: {labels_path} ({labels_array.shape[0]} samples, {labels_array.shape[1]} features)")
 
     elapsed = time.time() - start_time
-    print(f"Jena Climate download and CSV generation completed in {elapsed:.2f}s\n")
+    step.info(f"completed in {elapsed:.2f}s")
 
     return str(inputs_path), str(labels_path)
 
 
 def generate_all_datasets(
+    step: StepHandle,
     output_dir: str = "datasets",
     force_download: bool = False
 ) -> dict:
     """Generate all datasets from raw sources, using ALL available samples
     for both (no caps).
 
+    Opens two child steps under `step`: "Generating MNIST" and
+    "Generating Temperature (Jena Climate)".
+
     Args:
+        step: open StepHandle this call nests its two child steps under.
         output_dir: Directory to save CSV files
         force_download: If True, re-download all datasets
 
@@ -358,26 +383,27 @@ def generate_all_datasets(
     results = {}
 
     # Generate MNIST; all 70,000 samples (train + test)
-    print("\n[1/2] Generating MNIST (full 70,000 samples)...")
-    mnist_inputs, mnist_labels = download_mnist_csv(
-        output_dir, num_samples=None, force_download=force_download
-    )
-    results['mnist_inputs'] = mnist_inputs
-    results['mnist_labels'] = mnist_labels
+    with step.child("Generating MNIST") as mnist_step:
+        mnist_inputs, mnist_labels = download_mnist_csv(
+            mnist_step, output_dir, num_samples=None, force_download=force_download
+        )
+        results['mnist_inputs'] = mnist_inputs
+        results['mnist_labels'] = mnist_labels
 
     # Generate Temperature (Jena Climate); all windows at 2-hour
     # resolution (~34,951), not the raw 10-minute row count.
-    print("[2/2] Generating Temperature (Jena Climate, all available windows)...")
-    temp_inputs, temp_labels = download_jena_climate_csv(
-        output_dir, target_samples=None, force_download=force_download
-    )
-    results['temperature_inputs'] = temp_inputs
-    results['temperature_labels'] = temp_labels
+    with step.child("Generating Temperature (Jena Climate)") as temp_step:
+        temp_inputs, temp_labels = download_jena_climate_csv(
+            temp_step, output_dir, target_samples=None, force_download=force_download
+        )
+        results['temperature_inputs'] = temp_inputs
+        results['temperature_labels'] = temp_labels
 
     return results
 
 
 def get_dataset_paths(
+    step: StepHandle,
     dataset_name: str,
     output_dir: str = "datasets",
     try_download: bool = True
@@ -385,6 +411,8 @@ def get_dataset_paths(
     """Get dataset paths, optionally downloading if not found.
 
     Args:
+        step: open StepHandle this call nests a child step under, if a
+            download is actually needed.
         dataset_name: Either 'mnist' or 'temperature'
         output_dir: Directory where CSV files are stored
         try_download: If True, attempt to download if files don't exist
@@ -402,17 +430,20 @@ def get_dataset_paths(
         labels_path = output_dir / "mnist_digit_labels.csv"
 
         if try_download and (not inputs_path.exists() or not labels_path.exists()):
-            return download_mnist_csv(output_dir, num_samples=None)
+            with step.child("Generating MNIST") as sub:
+                return download_mnist_csv(sub, output_dir, num_samples=None)
     elif dataset_name == 'temperature':
         inputs_path = output_dir / "temperature_inputs.csv"
         labels_path = output_dir / "temperature_labels.csv"
 
         if try_download and (not inputs_path.exists() or not labels_path.exists()):
-            return download_jena_climate_csv(output_dir, target_samples=None)
+            with step.child("Generating Temperature (Jena Climate)") as sub:
+                return download_jena_climate_csv(sub, output_dir, target_samples=None)
     else:
         raise ValueError(f"Unknown dataset: {dataset_name}. Use 'mnist' or 'temperature'.")
 
     if not inputs_path.exists() or not labels_path.exists():
+        step.error(f"dataset files not found in {output_dir}")
         raise FileNotFoundError(
             f"Dataset files not found in {output_dir}. "
             f"Inputs: {inputs_path.exists()}, Labels: {labels_path.exists()}. "
@@ -422,10 +453,20 @@ def get_dataset_paths(
     return str(inputs_path), str(labels_path)
 
 
-def ensure_datasets_exist(dataset_dir: str = "datasets", auto_download: bool = True) -> dict:
+def ensure_datasets_exist(
+    step: StepHandle,
+    dataset_dir: str = "datasets",
+    auto_download: bool = True
+) -> dict:
     """Ensure dataset CSV files exist, downloading from raw sources if needed.
 
+    If anything is missing, opens a "Downloading datasets" child step under
+    `step` (which itself nests "Generating MNIST" / "Generating Temperature
+    (Jena Climate)" via generate_all_datasets). If everything already
+    exists, just logs one info line onto `step` and returns.
+
     Args:
+        step: open StepHandle to log into / nest the download step under.
         dataset_dir: Directory where CSV files should be stored
         auto_download: If True, automatically download and generate if files don't exist
 
@@ -452,9 +493,10 @@ def ensure_datasets_exist(dataset_dir: str = "datasets", auto_download: bool = T
     missing_files = [f for f in expected_files if not (dataset_dir / f).exists()]
 
     if missing_files and auto_download:
-        print(f"Missing datasets: {missing_files}")
-        print("Downloading from raw sources (no sample caps)...")
-        generate_all_datasets(dataset_dir)
+        step.info(f"missing datasets: {missing_files}")
+        with step.child("Downloading datasets") as dl_step:
+            dl_step.info("no sample caps; downloading from raw sources")
+            generate_all_datasets(dl_step, dataset_dir)
         return {
             'temperature_inputs': str(dataset_dir / 'temperature_inputs.csv'),
             'temperature_labels': str(dataset_dir / 'temperature_labels.csv'),
@@ -462,12 +504,13 @@ def ensure_datasets_exist(dataset_dir: str = "datasets", auto_download: bool = T
             'mnist_labels': str(dataset_dir / 'mnist_digit_labels.csv')
         }
     elif missing_files:
+        step.error(f"dataset files missing in {dataset_dir}: {missing_files}")
         raise FileNotFoundError(
             f"Dataset files missing in {dataset_dir}: {missing_files}. "
             f"Set auto_download=True to generate them from raw sources."
         )
     else:
-        print("All dataset files found locally.")
+        step.info("all dataset files found locally")
         return {
             'temperature_inputs': str(dataset_dir / 'temperature_inputs.csv'),
             'temperature_labels': str(dataset_dir / 'temperature_labels.csv'),
@@ -476,7 +519,7 @@ def ensure_datasets_exist(dataset_dir: str = "datasets", auto_download: bool = T
         }
 
 
-def cleanup_intermediate_files(output_dir: str = "datasets") -> None:
+def cleanup_intermediate_files(step: StepHandle, output_dir: str = "datasets") -> None:
     """Remove intermediate download/cache artifacts, keeping only the
     final CSV outputs (mnist_digit_inputs.csv, mnist_digit_labels.csv,
     temperature_inputs.csv, temperature_labels.csv).
@@ -485,20 +528,24 @@ def cleanup_intermediate_files(output_dir: str = "datasets") -> None:
       - datasets/.mnist_cache/          (raw torchvision MNIST download)
       - datasets/jena_climate_2009_2016.csv      (unzipped raw Jena data)
       - datasets/jena_climate_2009_2016.csv.zip  (downloaded zip)
+
+    Args:
+        step: open StepHandle to log removals into.
+        output_dir: directory to clean up.
     """
     output_dir = Path(output_dir)
 
     mnist_cache = output_dir / ".mnist_cache"
     if mnist_cache.exists():
         shutil.rmtree(mnist_cache)
-        print(f"Removed {mnist_cache}")
+        step.info(f"removed {mnist_cache}")
 
     jena_csv = output_dir / "jena_climate_2009_2016.csv"
     if jena_csv.exists():
         jena_csv.unlink()
-        print(f"Removed {jena_csv}")
+        step.info(f"removed {jena_csv}")
 
     jena_zip = output_dir / "jena_climate_2009_2016.csv.zip"
     if jena_zip.exists():
         jena_zip.unlink()
-        print(f"Removed {jena_zip}\n")
+        step.info(f"removed {jena_zip}")
