@@ -268,7 +268,7 @@ def download_jena_climate_csv(
             step.warn(
                 f"{irregular} raw timestamp gaps are not exactly 10 minutes apart\n"
                 f"{' '*10}2-hour decimation is positional, so windows spanning these points may drift\n"
-                f"{' '*10}But these irregular gaps are minimal and safe to ignore for this dataset."
+                f"{' '*10}but these irregular gaps are minimal and safe to ignore for this dataset"
             )
 
     # Start decimating from the first row that lands on a clean 2-hour
