@@ -4,11 +4,11 @@ from pathlib import Path
 from datetime import datetime
 from typing import Optional
 from rich.padding import Padding
-from ..richlog.core import INDENT
-
 import re
 
 from ..richlog import StepHandle
+from ..richlog.core import INDENT
+
 
 
 def save_plot(step: StepHandle, fig, experiment_name: str, filename: str,
