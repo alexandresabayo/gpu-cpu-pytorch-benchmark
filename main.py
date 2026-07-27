@@ -14,7 +14,7 @@ from src.models import LinearBased, Conv1dBased, Conv2dBased, LSTMBased
 from src.data import load_as_tensor, prepare_dataloaders, ensure_datasets_exist
 from src.data.generation import cleanup_intermediate_files
 from src.training import run_experiment
-from src.utils import load_config_from_yaml
+from src.utils import load_config_from_yaml, export_results_csv
 from src.visualization import visualize_predictions
 from src.visualization.training import print_metrics_summary
 from rich.padding import Padding
@@ -43,15 +43,13 @@ def main():
 
             config, temp, mnist, dataset_config = load_config_from_yaml(step)
 
-            # Ensure datasets exist, downloading from raw sources if needed
-            dataset_dir = dataset_config.dataset_dir if dataset_config else "datasets"
+            # Downloading from raw sources if needed
             dataset_paths = ensure_datasets_exist(
-                step, dataset_dir,
-                auto_download=dataset_config.auto_download if dataset_config else True
+                step, dataset_config.dataset_dir,
+                auto_download=dataset_config.auto_download
             )
 
-            # Clean up intermediate download files
-            cleanup_intermediate_files(step, dataset_dir)
+            cleanup_intermediate_files(step, dataset_config.dataset_dir)
 
             # Load datasets with memory efficiency
             X_temp = load_as_tensor(dataset_paths['temperature_inputs'], (-1, 84, 1))
@@ -171,6 +169,8 @@ def main():
             padded_header = Padding(header, (0, 0, 0, len(INDENT) * 3))
             log.block(padded_header)
             print_metrics_summary(log, metrics)
+        
+        export_results_csv(log, results, save_dir='results', run_timestamp=run_timestamp)
 
 
 if __name__ == '__main__':

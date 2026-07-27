@@ -30,7 +30,8 @@ from .utils import (
     TemperatureConfig,
     MNISTConfig,
     calculate_metrics,
-    predict_batch
+    predict_batch,
+    export_results_csv
 )
 from .visualization import (
     plot_training_history,
