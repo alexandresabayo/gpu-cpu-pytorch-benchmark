@@ -3,11 +3,9 @@
 from pathlib import Path
 from datetime import datetime
 from typing import Optional
-from rich.padding import Padding
 import re
 
 from ..richlog import StepHandle, NULL_STEP
-from ..richlog.core import INDENT
 
 
 
@@ -51,4 +49,4 @@ def save_plot(fig, experiment_name: str, filename: str,
     else: 
         message = f"saved plot:\n    {filepath}"
 
-    step.block(Padding(message, (0, 0, 0, len(INDENT) * 3), style="dim"))
+    step.block(message, indent=3, style="dim")

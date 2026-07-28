@@ -6,11 +6,9 @@ import numpy as np
 from typing import Dict, List, Optional
 from pathlib import Path
 from rich.text import Text
-from rich.padding import Padding
 from typing import Union
 from .utils import save_plot
 from ..richlog import StepHandle, Logger, NULL_STEP
-from ..richlog.core import INDENT
 
 
 def plot_training_history(history: Dict[str, List], training_time: float,
@@ -86,5 +84,4 @@ def print_metrics_summary(metrics_dict: Dict[str, Dict[str, float]],
         lines.append(f'  {metric + ":":<12}', style="bold")
         lines.append(" | ".join(parts), style="dim")
 
-    padded_lines = Padding(lines, (0, 0, 0, len(INDENT) * 3))
-    step.block(padded_lines)
+    step.block(lines, indent=3)

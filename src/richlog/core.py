@@ -46,6 +46,7 @@ from pathlib import Path
 from typing import Any, Deque, List, Optional
 
 from rich.console import Console, Group
+from rich.padding import Padding
 from rich.text import Text
 
 WINDOW_SIZE = 8          # how many sub-lines stay visible under a live step
@@ -156,14 +157,25 @@ class StepHandle:
         """Open a nested step under this one (same mechanism, deeper stack)."""
         return self._logger.step(title)
 
-    def block(self, renderable) -> None:
+    def block(self, renderable, indent: Optional[int] = None, style: Optional[str] = None) -> None:
         """Queue a permanent block (e.g. a metrics table) to appear in this
         step's own finalized output, in the position it occurred — not
         printed immediately, since this step (or an ancestor) might still
         be open and we want everything to commit together, header first.
 
         Still written to the file log immediately, same as everything else.
+        
+        Args:
+            renderable: The Rich renderable to display.
+            indent: Optional number of indent levels. Each level is `len(INDENT)` 
+                    spaces, applied as left padding via Rich's Padding.
+            style: Optional style string to apply to the renderable.
         """
+        if style is not None:
+            if isinstance(renderable, str):
+                renderable = Text(renderable, style=style)
+        if indent is not None:
+            renderable = Padding(renderable, (0, 0, 0, len(INDENT) * indent))
         self._logger._write_block_to_file(renderable)
         self._state.permanent.append(renderable)
 
@@ -229,7 +241,7 @@ class NullStepHandle:
         `StepHandle.child`); returns a context manager yielding `self`."""
         return _NullStepContext(self)
 
-    def block(self, renderable) -> None:
+    def block(self, renderable, indent: Optional[int] = None, style: Optional[str] = None) -> None:
         pass
 
 
@@ -270,14 +282,25 @@ class Logger:
     def step(self, title: str) -> _StepContext:
         return _StepContext(self, title)
 
-    def block(self, renderable) -> None:
+    def block(self, renderable, indent: Optional[int] = None, style: Optional[str] = None) -> None:
         """Print a permanent block straight to scrollback, right now.
 
         Only call this with no step open (e.g. a final report after every
         step has already closed) — it prints immediately rather than
         queuing, since there's no enclosing step to commit alongside.
         Called from inside a step, use step.block() instead.
+        
+        Args:
+            renderable: The Rich renderable to display.
+            indent: Optional number of indent levels. Each level is `len(INDENT)`
+                    spaces, applied as left padding via Rich's Padding.
+            style: Optional style string to apply to the renderable.
         """
+        if style is not None:
+            if isinstance(renderable, str):
+                renderable = Text(renderable, style=style)
+        if indent is not None:
+            renderable = Padding(renderable, (0, 0, 0, len(INDENT) * indent))
         self.console.print(renderable)
         self._write_block_to_file(renderable)
 

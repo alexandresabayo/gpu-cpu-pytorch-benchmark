@@ -20,10 +20,8 @@ are flattened into their own top-level column, e.g. `test_accuracy`.
 import csv
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
-from rich.padding import Padding
 
 from ..richlog import Logger, StepHandle, NULL_STEP
-from ..richlog.core import INDENT
 
 
 def _flatten_metrics(metrics: Dict[str, Dict[str, float]]) -> Dict[str, Any]:
@@ -149,4 +147,4 @@ def export_results_csv(results: List[dict], save_dir: str = 'results', run_times
     _write_csv(metrics_path, metrics_rows)
 
     message = f"\nexported results:\n    {summary_path}\n    {metrics_path}"
-    log.block(Padding(message, (0, 0, 0, len(INDENT) * 3), style="dim"))
+    log.block(message, indent=3, style="dim")

@@ -9,8 +9,6 @@ from ..training.core import train_model
 from ..utils.metrics import calculate_metrics
 from ..visualization.training import plot_training_history, print_metrics_summary
 from ..richlog import StepHandle, NULL_STEP
-from rich.padding import Padding
-from ..richlog.core import INDENT
 
 
 def run_training_experiment(model: nn.Module, loaders: Dict[str, DataLoader],
@@ -56,8 +54,7 @@ def run_training_experiment(model: nn.Module, loaders: Dict[str, DataLoader],
     header = f"{device.type.upper()} training time: {training_time:.2f}s"
     if gpu_mem is not None:
         header += f" | GPU memory used: {gpu_mem:.2f} GB"
-    padded_header = Padding(header, (0, 0, 0, len(INDENT) * 3))
-    step.block(padded_header)
+    step.block(header, indent=3)
     print_metrics_summary(metrics, step=step)
 
     return training_time, metrics
@@ -74,7 +71,7 @@ def run_experiment(experiment_name: str, model_cpu: nn.Module, model_gpu: nn.Mod
     step itself.
     """
     n_params = sum(p.numel() for p in model_cpu.parameters())
-    step.info(f"model parameters: {n_params:,}")
+    step.block(f"model parameters: {n_params:,}", indent=3, style="dim")
 
     cpu_time, cpu_metrics = run_training_experiment(
         model_cpu, loaders, criterion, torch.device('cpu'), config, experiment_name, run_timestamp, step=step
@@ -88,7 +85,7 @@ def run_experiment(experiment_name: str, model_cpu: nn.Module, model_gpu: nn.Mod
         )
 
         speedup = cpu_time / gpu_time
-        step.info(f"speedup: {speedup:.2f}x")
+        step.block(f"speedup: {speedup:.2f}x", indent=3, style="dim")
 
         torch.cuda.empty_cache()
         torch.cuda.reset_peak_memory_stats()

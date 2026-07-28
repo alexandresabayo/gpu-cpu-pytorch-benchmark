@@ -17,10 +17,8 @@ from src.training import run_experiment
 from src.utils import load_config_from_yaml, export_results_csv
 from src.visualization import visualize_predictions
 from src.visualization.training import print_metrics_summary
-from rich.padding import Padding
 from src.utils.helpers import format_time
 from src.richlog import Logger
-from src.richlog.core import INDENT
 
 
 def main():
@@ -167,8 +165,7 @@ def main():
         for result in results:
             metrics = result['gpu_metrics'] or result['cpu_metrics']
             header = f"\n{result['name']} (params: {result['n_params']:,}):"
-            padded_header = Padding(header, (0, 0, 0, len(INDENT) * 3))
-            log.block(padded_header)
+            log.block(header, indent=3)
             print_metrics_summary(metrics, step=log)
         
         export_results_csv(results, save_dir='results', run_timestamp=run_timestamp, log=log)
