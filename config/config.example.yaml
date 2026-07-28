@@ -11,7 +11,6 @@ training:
   dropout: 0.2
   early_stopping: true
   patience: 20
-  show_progress: false
   training_history: true
 
 # Model configurations
