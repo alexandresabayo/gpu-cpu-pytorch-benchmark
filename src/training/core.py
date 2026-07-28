@@ -68,7 +68,7 @@ def train_model(model: nn.Module, loaders: Dict[str, DataLoader],
         'val_loss': []
     }
 
-    prog = step.progress(total=config.epochs, label="epoch")
+    prog = step.progress(total=config.epochs, label="epochs")
 
     start_time = time.perf_counter()
     
