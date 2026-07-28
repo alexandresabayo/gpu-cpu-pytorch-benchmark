@@ -168,6 +168,77 @@ class StepHandle:
         self._state.permanent.append(renderable)
 
 
+class NullProgressHandle:
+    """No-op stand-in for `ProgressHandle`, returned by
+    `NullStepHandle.progress()`. `.advance()`/`.update()` do nothing."""
+
+    def advance(self, n: int = 1) -> None:
+        pass
+
+    def update(self, current: int) -> None:
+        pass
+
+
+class _NullStepContext:
+    """No-op context manager returned by `NullStepHandle.child()`. Yields
+    the same shared `NullStepHandle` instance, so nested
+    `with step.child(...) as sub:` code works unchanged and `sub` is still
+    a no-op handle."""
+
+    def __init__(self, handle: "NullStepHandle"):
+        self._handle = handle
+
+    def __enter__(self) -> "NullStepHandle":
+        return self._handle
+
+    def __exit__(self, exc_type, exc, tb) -> bool:
+        return False  # never swallow exceptions
+
+
+class NullStepHandle:
+    """No-op stand-in for `StepHandle`, used as the default `step`/`log`
+    argument throughout the training/data/visualization pipeline so every
+    function works the same way with logging fully disabled.
+
+    This is a full no-op: it does not touch the console *or* the file log
+    (unlike a real `StepHandle`, whose `info()` lines still land in the
+    file log even though they don't survive to the terminal). A
+    quiet-but-still-file-logged mode would be a separate, smaller change to
+    `Logger.__init__`, not this class.
+
+    Stateless and safe to share; see `NULL_STEP` below.
+    """
+
+    def info(self, msg: str) -> None:
+        pass
+
+    def warn(self, msg: str) -> None:
+        pass
+
+    def error(self, msg: str) -> None:
+        pass
+
+    def prompt(self, msg: str) -> None:
+        pass
+
+    def progress(self, total: int, label: str = "") -> NullProgressHandle:
+        return NullProgressHandle()
+
+    def child(self, title: str) -> _NullStepContext:
+        """Open a no-op nested step under this one (mirrors
+        `StepHandle.child`); returns a context manager yielding `self`."""
+        return _NullStepContext(self)
+
+    def block(self, renderable) -> None:
+        pass
+
+
+# Shared instance: NullStepHandle is stateless, so one instance can be
+# reused everywhere as the default `step`/`log` argument instead of
+# constructing a new one per call.
+NULL_STEP = NullStepHandle()
+
+
 class _StepContext:
     def __init__(self, logger: "Logger", title: str):
         self._logger = logger

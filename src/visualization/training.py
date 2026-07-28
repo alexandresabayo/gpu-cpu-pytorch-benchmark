@@ -9,13 +9,13 @@ from rich.text import Text
 from rich.padding import Padding
 from typing import Union
 from .utils import save_plot
-from ..richlog import StepHandle, Logger
+from ..richlog import StepHandle, Logger, NULL_STEP
 from ..richlog.core import INDENT
 
 
-def plot_training_history(step: StepHandle, history: Dict[str, List], training_time: float,
+def plot_training_history(history: Dict[str, List], training_time: float,
                           experiment_name: Optional[str] = None, save_dir: str = 'results',
-                          run_timestamp: Optional[str] = None) -> None:
+                          run_timestamp: Optional[str] = None, *, step: StepHandle = NULL_STEP) -> None:
     """Plot training history and save as PNG file"""
     fig, ax = plt.subplots(figsize=(8, 4))
     
@@ -53,14 +53,15 @@ def plot_training_history(step: StepHandle, history: Dict[str, List], training_t
     
     # Save plot instead of showing it
     if experiment_name:
-        save_plot(step, fig, experiment_name, f'training_history_{int(training_time)}s.png', save_dir, run_timestamp)
+        save_plot(fig, experiment_name, f'training_history_{int(training_time)}s.png', save_dir, run_timestamp, step=step)
     else:
         plt.show()
     
     plt.close(fig)
 
 
-def print_metrics_summary(step: Union[StepHandle, Logger], metrics_dict: Dict[str, Dict[str, float]]) -> None:
+def print_metrics_summary(metrics_dict: Dict[str, Dict[str, float]],
+                          *, step: Union[StepHandle, Logger] = NULL_STEP) -> None:
     """Log a metrics table as one permanent block (.block()), so it
     survives in the terminal even after the step it was computed under has
     already closed and collapsed.

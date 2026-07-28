@@ -2,7 +2,7 @@
 
 import yaml
 from dataclasses import dataclass
-from ..richlog import StepHandle
+from ..richlog import StepHandle, NULL_STEP
 
 # Define dataclasses first to avoid circular references
 @dataclass
@@ -47,7 +47,7 @@ class DatasetConfig:
     mnist_labels: str = "datasets/mnist_digit_labels.csv"
 
 
-def load_config_from_yaml(step: StepHandle) -> tuple[TrainingConfig, TemperatureConfig, MNISTConfig, DatasetConfig]:
+def load_config_from_yaml(*, step: StepHandle = NULL_STEP) -> tuple[TrainingConfig, TemperatureConfig, MNISTConfig, DatasetConfig]:
     """Load configuration from YAML file for all dataclasses.
 
     Args:

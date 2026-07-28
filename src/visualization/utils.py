@@ -6,13 +6,14 @@ from typing import Optional
 from rich.padding import Padding
 import re
 
-from ..richlog import StepHandle
+from ..richlog import StepHandle, NULL_STEP
 from ..richlog.core import INDENT
 
 
 
-def save_plot(step: StepHandle, fig, experiment_name: str, filename: str,
-              save_dir: str = 'results', run_timestamp: Optional[str] = None) -> None:
+def save_plot(fig, experiment_name: str, filename: str,
+              save_dir: str = 'results', run_timestamp: Optional[str] = None,
+              *, step: StepHandle = NULL_STEP) -> None:
     """Save plot as PNG file in organized directory structure
     
     Args:

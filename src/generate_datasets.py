@@ -69,16 +69,16 @@ def main():
         with log.step("Generate datasets") as step:
             if args.mnist and not args.temperature:
                 with step.child("Generating MNIST") as sub:
-                    download_mnist_csv(sub, output_dir, force_download=args.force)
+                    download_mnist_csv(output_dir, force_download=args.force, step=sub)
             elif args.temperature and not args.mnist:
                 with step.child("Generating Temperature (Jena Climate)") as sub:
-                    download_jena_climate_csv(sub, output_dir, force_download=args.force)
+                    download_jena_climate_csv(output_dir, force_download=args.force, step=sub)
             else:
-                generate_all_datasets(step, output_dir, force_download=args.force)
+                generate_all_datasets(output_dir, force_download=args.force, step=step)
 
             if not args.keep_intermediate:
                 with step.child("Cleaning up intermediate files") as sub:
-                    cleanup_intermediate_files(sub, output_dir)
+                    cleanup_intermediate_files(output_dir, step=sub)
 
             step.info(f"files saved to {output_dir.absolute()}")
 

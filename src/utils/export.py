@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 from rich.padding import Padding
 
-from ..richlog import Logger, StepHandle
+from ..richlog import Logger, StepHandle, NULL_STEP
 from ..richlog.core import INDENT
 
 
@@ -111,8 +111,8 @@ def _write_csv(path: Path, rows: List[Dict[str, Any]]) -> None:
         writer.writerows(rows)
 
 
-def export_results_csv(log: Union[StepHandle, Logger], results: List[dict],
-                        save_dir: str = 'results', run_timestamp: Optional[str] = None) -> None:
+def export_results_csv(results: List[dict], save_dir: str = 'results', run_timestamp: Optional[str] = None,
+                        *, log: Union[StepHandle, Logger] = NULL_STEP) -> None:
     """Export both result "tabs" as CSV files, flattened as described above:
 
       - `results_summary.csv`: one row per experiment, matching the

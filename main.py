@@ -18,9 +18,9 @@ from src.utils import load_config_from_yaml, export_results_csv
 from src.visualization import visualize_predictions
 from src.visualization.training import print_metrics_summary
 from rich.padding import Padding
-from src.richlog.core import INDENT
 from src.utils.helpers import format_time
 from src.richlog import Logger
+from src.richlog.core import INDENT
 
 
 def main():
@@ -41,15 +41,16 @@ def main():
                 step.info(f"GPU memory: {torch.cuda.get_device_properties(0).total_memory / 1e9:.2f} GB")
             step.info(f"run timestamp: {run_timestamp}")
 
-            config, temp, mnist, dataset_config = load_config_from_yaml(step)
+            config, temp, mnist, dataset_config = load_config_from_yaml(step=step)
 
             # Downloading from raw sources if needed
             dataset_paths = ensure_datasets_exist(
-                step, dataset_config.dataset_dir,
-                auto_download=dataset_config.auto_download
+                dataset_config.dataset_dir,
+                auto_download=dataset_config.auto_download,
+                step=step
             )
 
-            cleanup_intermediate_files(step, dataset_config.dataset_dir)
+            cleanup_intermediate_files(dataset_config.dataset_dir, step=step)
 
             # Load datasets with memory efficiency
             X_temp = load_as_tensor(dataset_paths['temperature_inputs'], (-1, 84, 1))
@@ -126,17 +127,17 @@ def main():
                 model_gpu = copy.deepcopy(model_cpu)
                 criterion = experiment['criterion']
 
-                result = run_experiment(step, name, model_cpu, model_gpu, loaders, criterion, config, run_timestamp)
+                result = run_experiment(name, model_cpu, model_gpu, loaders, criterion, config, run_timestamp, step=step)
 
-                visualize_predictions(step, name, model_gpu, loaders['test'], experiment['visualize_samples'],
-                                      save_dir='results', run_timestamp=run_timestamp)
+                visualize_predictions(name, model_gpu, loaders['test'], experiment['visualize_samples'],
+                                      save_dir='results', run_timestamp=run_timestamp, step=step)
 
             results.append(result)
 
         # Final Results Summary — a report, not a log: printed once, in full,
         # after every step has closed. log.block() keeps it in the file log
         # too, without pretending it belongs to any particular step.
-        table = Table(title="\nFinal Results Summary", header_style="")
+        table = Table(title="\nFinal Results Summary")
         table.add_column("Experiment")
         table.add_column("Params", justify="right")
         table.add_column("CPU Time", justify="right")
@@ -168,9 +169,9 @@ def main():
             header = f"\n{result['name']} (params: {result['n_params']:,}):"
             padded_header = Padding(header, (0, 0, 0, len(INDENT) * 3))
             log.block(padded_header)
-            print_metrics_summary(log, metrics)
+            print_metrics_summary(metrics, step=log)
         
-        export_results_csv(log, results, save_dir='results', run_timestamp=run_timestamp)
+        export_results_csv(results, save_dir='results', run_timestamp=run_timestamp, log=log)
 
 
 if __name__ == '__main__':
