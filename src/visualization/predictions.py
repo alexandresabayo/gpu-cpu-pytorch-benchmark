@@ -62,7 +62,7 @@ def visualize_predictions(experiment_name: str, model: torch.nn.Module,
     return predictions, targets
 
 
-def _plot_mnist_predictions(experiment_name: str, inputs: np.ndarray, predictions: np.ndarray, 
+def _plot_mnist_predictions(experiment_name: str, inputs: np.ndarray, predictions: np.ndarray,
                             targets: np.ndarray, num_samples: int):
     """Helper: plot MNIST predictions and return figure"""
     fig, axes = plt.subplots(1, num_samples, figsize=(8, 3))
@@ -92,7 +92,7 @@ def _plot_timeseries_predictions(experiment_name: str, inputs: np.ndarray, predi
     fig, axes = plt.subplots(num_samples, 1, figsize=(8, 3 * num_samples))
     if num_samples == 1:
         axes = [axes]
-    fig.suptitle(f'{experiment_name} - Model Predictions vs Actual', 
+    fig.suptitle(f'{experiment_name} - Model Predictions vs Actual',
                  fontsize=16, fontweight='bold')
 
     for idx in range(num_samples):
@@ -109,9 +109,9 @@ def _plot_timeseries_predictions(experiment_name: str, inputs: np.ndarray, predi
         ax.plot(future_times, targets[idx], label='Target / Future (actual)',
                 linewidth=2.5, marker='s', markersize=5, alpha=0.95, color='black')
         ax.plot(future_times, predictions[idx], label='Predicted (model)',
-                linewidth=2.5, linestyle='--', marker='D', markersize=5, 
+                linewidth=2.5, linestyle='--', marker='D', markersize=5,
                 alpha=0.8, color='tab:orange')
-        ax.axvline(x=input_len - 0.5, color='red', linestyle=':', 
+        ax.axvline(x=input_len - 0.5, color='red', linestyle=':',
                    linewidth=2, alpha=0.6, label='Forecast start')
 
         mse = np.mean((targets[idx] - predictions[idx]) ** 2)

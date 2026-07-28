@@ -23,7 +23,7 @@ class Conv2dBased(nn.Module):
             nn.MaxPool2d(2),
             nn.Dropout(dropout),
             
-            nn.AdaptiveAvgPool2d((1, 1)) 
+            nn.AdaptiveAvgPool2d((1, 1))
         )
         
         self.fc = nn.Sequential(

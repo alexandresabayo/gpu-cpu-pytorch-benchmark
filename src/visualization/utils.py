@@ -46,7 +46,7 @@ def save_plot(fig, experiment_name: str, filename: str,
     
     if "prediction" in filename:
         message = f"prediction plot showing model outputs vs actual values:\n    {filepath}"
-    else: 
+    else:
         message = f"saved plot:\n    {filepath}"
 
     step.block(message, indent=3, style="dim")

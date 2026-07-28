@@ -6,7 +6,7 @@ from typing import Dict, Tuple
 from sklearn.metrics import f1_score, roc_auc_score, accuracy_score
 
 
-def predict_batch(model: torch.nn.Module, data_loader: torch.utils.data.DataLoader, 
+def predict_batch(model: torch.nn.Module, data_loader: torch.utils.data.DataLoader,
                   device: torch.device) -> Tuple[torch.Tensor, torch.Tensor]:
     """Compute all predictions and targets"""
     model.eval()
@@ -25,7 +25,7 @@ def predict_batch(model: torch.nn.Module, data_loader: torch.utils.data.DataLoad
     return torch.cat(all_predictions, dim=0), torch.cat(all_targets, dim=0)
 
 
-def calculate_regression_metrics(predictions: torch.Tensor, 
+def calculate_regression_metrics(predictions: torch.Tensor,
                                  targets: torch.Tensor) -> Dict[str, float]:
     """Calculate regression metrics"""
     mae = torch.nn.L1Loss()(predictions, targets).item()
@@ -39,7 +39,7 @@ def calculate_regression_metrics(predictions: torch.Tensor,
     return {'mae': mae, 'rmse': rmse, 'r2': r2}
 
 
-def calculate_classification_metrics(predictions: torch.Tensor, 
+def calculate_classification_metrics(predictions: torch.Tensor,
                                      targets: torch.Tensor) -> Dict[str, float]:
     """Calculate classification metrics using sklearn."""
     # Convert to numpy and get predicted classes
@@ -56,7 +56,7 @@ def calculate_classification_metrics(predictions: torch.Tensor,
         metrics['auc_roc'] = roc_auc_score(targets_np, pred_probs[:, 1])
     else:
         metrics['f1_macro'] = f1_score(targets_np, pred_classes, average='macro')
-        metrics['auc_roc'] = roc_auc_score(targets_np, pred_probs, 
+        metrics['auc_roc'] = roc_auc_score(targets_np, pred_probs,
                                            multi_class='ovr',average='macro')
         
     metrics['accuracy'] = accuracy_score(targets_np, pred_classes)
@@ -64,7 +64,7 @@ def calculate_classification_metrics(predictions: torch.Tensor,
     return metrics
 
 
-def calculate_metrics(model: torch.nn.Module, data_loader: torch.utils.data.DataLoader, 
+def calculate_metrics(model: torch.nn.Module, data_loader: torch.utils.data.DataLoader,
                       criterion, device: torch.device) -> Dict[str, float]:
     """Evaluate model and return metrics"""
     predictions, targets = predict_batch(model, data_loader, device)

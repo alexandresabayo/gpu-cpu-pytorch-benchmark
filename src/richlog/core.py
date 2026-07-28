@@ -167,7 +167,7 @@ class StepHandle:
         
         Args:
             renderable: The Rich renderable to display.
-            indent: Optional number of indent levels. Each level is `len(INDENT)` 
+            indent: Optional number of indent levels. Each level is `len(INDENT)`
                     spaces, applied as left padding via Rich's Padding.
             style: Optional style string to apply to the renderable.
         """

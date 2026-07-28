@@ -9,7 +9,7 @@ from collections.abc import Generator
 
 
 
-def load_as_tensor(csv_path: str, reshape: Optional[tuple] = None, 
+def load_as_tensor(csv_path: str, reshape: Optional[tuple] = None,
                    memory_efficient: bool = True) -> torch.Tensor:
     """Load CSV and convert to float32 tensor with optional reshaping"""
     if memory_efficient:
@@ -36,7 +36,7 @@ def _load_memory_efficient(csv_path: str,
     temp_file = csv_path + '.memmap'
     
     # Create memory-mapped array
-    data_array = np.memmap(temp_file, dtype='float32', mode='w+', 
+    data_array = np.memmap(temp_file, dtype='float32', mode='w+',
                           shape=(n_rows, n_columns))
     
     # Process file in chunks to populate the memmap

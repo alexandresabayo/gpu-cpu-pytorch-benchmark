@@ -1,7 +1,7 @@
 """Training and evaluation utilities"""
 from .core import (
-    train_step, 
-    eval_step, 
+    train_step,
+    eval_step,
     train_model
 )
 from .experiment import (

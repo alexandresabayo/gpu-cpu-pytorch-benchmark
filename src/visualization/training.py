@@ -25,19 +25,19 @@ def plot_training_history(history: Dict[str, List], training_time: float,
     val_improvement = ((val_losses[0] - val_losses[-1]) / val_losses[0] * 100)
     
     fig.suptitle(
-        f'Training History | Time: {training_time:.2f}s | Train Δ: {train_improvement:.1f}% | Val Δ: {val_improvement:.1f}%', 
+        f'Training History | Time: {training_time:.2f}s | Train Δ: {train_improvement:.1f}% | Val Δ: {val_improvement:.1f}%',
         fontsize=13, fontweight='bold'
     )
     
-    ax.plot(epochs, train_losses, marker='o', linewidth=2.5, markersize=7, 
+    ax.plot(epochs, train_losses, marker='o', linewidth=2.5, markersize=7,
             color='#2E86AB', label='Train Loss', markerfacecolor='white', markeredgewidth=2)
-    ax.plot(epochs, val_losses, marker='s', linewidth=2.5, markersize=7, 
+    ax.plot(epochs, val_losses, marker='s', linewidth=2.5, markersize=7,
             color='#A23B72', label='Val Loss', markerfacecolor='white', markeredgewidth=2)
     
-    ax.annotate(f'{train_losses[-1]:.4f}', xy=(epochs[-1], train_losses[-1]), 
+    ax.annotate(f'{train_losses[-1]:.4f}', xy=(epochs[-1], train_losses[-1]),
                 xytext=(10, 0), textcoords='offset points', fontsize=9,
                 bbox=dict(boxstyle='round,pad=0.4', facecolor='lightblue', alpha=0.7))
-    ax.annotate(f'{val_losses[-1]:.4f}', xy=(epochs[-1], val_losses[-1]), 
+    ax.annotate(f'{val_losses[-1]:.4f}', xy=(epochs[-1], val_losses[-1]),
                 xytext=(10, 0), textcoords='offset points', fontsize=9,
                 bbox=dict(boxstyle='round,pad=0.4', facecolor='lightpink', alpha=0.7))
     

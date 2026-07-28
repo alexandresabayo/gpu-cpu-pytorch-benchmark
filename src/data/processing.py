@@ -25,7 +25,7 @@ def prepare_labels(y: torch.Tensor, is_classification: bool) -> torch.Tensor:
         return (y - y_min) / (y_max - y_min)
 
 
-def split_data(X: torch.Tensor, y: torch.Tensor, 
+def split_data(X: torch.Tensor, y: torch.Tensor,
                ratios: Tuple[float, float, float]) -> Tuple[Tuple, Tuple, Tuple]:
     """Split data into train/val/test"""
     train_ratio, val_ratio, _ = ratios

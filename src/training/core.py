@@ -9,7 +9,7 @@ from ..utils.config import TrainingConfig
 from ..richlog import StepHandle, NULL_STEP
 
 
-def train_step(model: nn.Module, data_loader: DataLoader, criterion, 
+def train_step(model: nn.Module, data_loader: DataLoader, criterion,
                optimizer, device: torch.device) -> float:
     """Training logic for one epoch (returns average loss)"""
     model.train()
@@ -31,8 +31,8 @@ def train_step(model: nn.Module, data_loader: DataLoader, criterion,
     return total_loss / batch_count
 
 
-def eval_step(model: nn.Module, data_loader: DataLoader, 
-              criterion, device: torch.device) -> float:  
+def eval_step(model: nn.Module, data_loader: DataLoader,
+              criterion, device: torch.device) -> float:
     """Validation logic for one epoch (returns average loss)"""
     model.eval()
     total_loss = 0.0
@@ -49,8 +49,8 @@ def eval_step(model: nn.Module, data_loader: DataLoader,
     return total_loss / batch_count
 
 
-def train_model(model: nn.Module, loaders: Dict[str, DataLoader], 
-                criterion, optimizer, device: torch.device, 
+def train_model(model: nn.Module, loaders: Dict[str, DataLoader],
+                criterion, optimizer, device: torch.device,
                 config: TrainingConfig, *, step: StepHandle = NULL_STEP) -> Tuple[Dict[str, List], float]:
     """Core training loop - returns history and time.
 
