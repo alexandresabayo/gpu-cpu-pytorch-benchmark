@@ -1,6 +1,3 @@
-# PyTorch GPU vs CPU Training Comparison Configuration
-
-# Training parameters
 training:
   batch_size: 256
   epochs: 200
@@ -13,7 +10,6 @@ training:
   patience: 20
   training_history: true
 
-# Model configurations
 models:
   temperature:
     seq_length: 84
@@ -26,7 +22,6 @@ models:
     width: 28
     num_classes: 10
 
-# Dataset configuration
 datasets:
   # Path to dataset directory
   dataset_dir: "datasets"
