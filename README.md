@@ -1,12 +1,12 @@
-## PyTorch GPU vs CPU training comparison
+## PyTorch Testbed
 
-A comprehensive benchmarking project comparing training performance between CPU and GPU for various neural network architectures on different datasets.
+A modular pipeline for training and comparing neural network architectures (multi-layer perceptron, convolutional network, and reccurent network) on a time-series regression task (temperature) and an image classification task (MNIST digits). Each experiment trains the same architecture on CPU and GPU so you can compare training time and resulting model quality side by side.
 
 ### Features
 
 - **Multiple model architectures**: MLP, 1D CNN, 2D CNN, LSTM
 - **Multiple datasets**: Temperature time series, MNIST digits
-- **Comprehensive benchmarking**: CPU vs GPU performance comparison
+- **CPU vs GPU comparison**: same architecture and data trained on both devices
 - **Detailed metrics**: Training time, memory usage, accuracy, loss, etc.
 - **Visualization**: Training history plots, prediction visualizations
 - **Modular design**: Clean separation of concerns
@@ -18,9 +18,9 @@ A comprehensive benchmarking project comparing training performance between CPU 
 ### Quickstart
 
 ```sh
-make install      # Create the Conda environment and install dependencies
-make data         # Generate/download the datasets
-make benchmark    # Run experiments
+make install    # Create the Conda environment and install dependencies
+make data       # Generate/download the datasets
+make run        # Run experiments
 ```
 
 You can modify the `main.py` script to run only specific experiments by commenting out the ones you don't need.
@@ -54,10 +54,21 @@ You can also configure parameters in the `TrainingConfig` class.
 
 ### Results
 
-The script provides:
+For each experiment, the pipeline reports:
 
-- Detailed training metrics for each experiment
-- CPU vs GPU performance comparison
-- Speedup calculations
-- Final summary table with all results
-- Visualizations of training progress and predictions
+- Training/validation/test metrics: loss, plus task-appropriate scores 
+- CPU and GPU training time, with a speedup ratio when a GPU is available
+- A final summary table across all experiments
+- Training history and prediction plots, saved under `results/`
+- CSV exports of both the summary table and the full per-split metrics (`results_summary.csv`, `results_metrics.csv`)
+
+### A note on the CPU vs GPU numbers
+
+This project measures training time on the hardware it happens to run on. It isn't a controlled hardware benchmark, so treat the speedup numbers as illustrative rather than authoritative:
+
+- Each experiment runs once per device; there are no repeated trials or reported variance.
+- No random seed is fixed, so the CPU and GPU runs don't follow identical training trajectories (data shuffling and dropout diverge between them).
+- There's no dedicated warm-up pass excluded from the clock, so GPU timing includes first-batch overhead (cuDNN autotuning, memory allocation).
+- Early stopping means CPU and GPU can stop at different epoch counts, so part of any time difference may reflect that rather than raw hardware speed.
+
+If you need rigorous numbers, add a fixed seed, a few untimed warm-up iterations, and average several runs per device.
