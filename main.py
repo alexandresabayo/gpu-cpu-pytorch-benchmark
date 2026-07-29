@@ -1,5 +1,5 @@
 """
-Main execution script for PyTorch GPU vs CPU Training Comparison
+Main execution script for PyTorch Testbed
 
 This script runs the complete experiment comparing training performance
 between CPU and GPU for various neural network architectures.

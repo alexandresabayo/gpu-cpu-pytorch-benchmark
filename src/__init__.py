@@ -1,5 +1,5 @@
 """
-PyTorch GPU vs CPU Training Comparison Package
+PyTorch Testbed Package
 
 This package provides tools for comparing training performance between CPU and GPU
 for various neural network architectures on different datasets.
