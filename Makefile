@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 CONDA := source $$(conda info --base)/etc/profile.d/conda.sh
 
-.PHONY: install data benchmark clean
+.PHONY: install data run clean
 
 install:
 	$(CONDA) && conda create -n pytorch python=3.10.12 -y
@@ -11,7 +11,7 @@ install:
 data:
 	$(CONDA) && conda activate pytorch && python -m src.generate_datasets
 
-benchmark:
+run:
 	$(CONDA) && conda activate pytorch && python main.py
 
 clean:
