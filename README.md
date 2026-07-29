@@ -1,6 +1,6 @@
 ## PyTorch Testbed
 
-A modular pipeline for training and comparing neural network architectures (multi-layer perceptron, convolutional network, and reccurent network) on a time-series regression task (temperature) and an image classification task (MNIST digits). Each experiment trains the same architecture on CPU and GPU so you can compare training time and resulting model quality side by side.
+A modular pipeline for training and comparing neural network architectures (multi-layer perceptron, convolutional network, and recurrent network) on a time-series regression task (temperature) and an image classification task (MNIST digits). Each experiment trains the same architecture on CPU and GPU so you can compare training time and resulting model quality side by side.
 
 ### Features
 
