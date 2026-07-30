@@ -7,6 +7,7 @@ from .core import (
     NullStepHandle,
     NullProgressHandle,
     NULL_STEP,
+    current,
 )
 
 __all__ = [
@@ -16,4 +17,5 @@ __all__ = [
     "NullStepHandle",
     "NullProgressHandle",
     "NULL_STEP",
+    "current",
 ]

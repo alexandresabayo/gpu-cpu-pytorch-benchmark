@@ -6,7 +6,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from typing import Dict, List, Tuple
 from ..utils.config import TrainingConfig
-from ..richlog import StepHandle, NULL_STEP
+from ..richlog import current
 
 
 def train_step(model: nn.Module, data_loader: DataLoader, criterion,
@@ -51,7 +51,7 @@ def eval_step(model: nn.Module, data_loader: DataLoader,
 
 def train_model(model: nn.Module, loaders: Dict[str, DataLoader],
                 criterion, optimizer, device: torch.device,
-                config: TrainingConfig, *, step: StepHandle = NULL_STEP) -> Tuple[Dict[str, List], float]:
+                config: TrainingConfig) -> Tuple[Dict[str, List], float]:
     """Core training loop - returns history and time.
 
     Progress is always shown as one epoch-level progress bar (regardless of
@@ -60,6 +60,7 @@ def train_model(model: nn.Module, loaders: Dict[str, DataLoader],
     detail was dropped entirely, so this is the single training loop rather
     than a choice between two.
     """
+    step = current()
     model.to(device)
     
     history = {

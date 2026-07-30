@@ -2,7 +2,7 @@
 
 import yaml
 from dataclasses import dataclass, fields
-from ..richlog import StepHandle, NULL_STEP
+from ..richlog import current
 
 # Define dataclasses first to avoid circular references
 @dataclass
@@ -53,15 +53,10 @@ def _from_dict(cls, data: dict):
     return cls(**{k: v for k, v in data.items() if k in known})
 
 
-def load_config_from_yaml(*, step: StepHandle = NULL_STEP) -> tuple[TrainingConfig, TemperatureConfig, MNISTConfig, DatasetConfig]:
-    """Load configuration from YAML file for all dataclasses.
+def load_config_from_yaml() -> tuple[TrainingConfig, TemperatureConfig, MNISTConfig, DatasetConfig]:
+    """Load configuration from YAML file for all dataclasses."""
+    step = current()
 
-    Args:
-        step: the open StepHandle to log warnings into if config.yaml is
-            missing, invalid, or fails to load for any other reason.
-            Defaults are used in all three cases; only the visibility of
-            the fallback has changed, not the fallback itself.
-    """
     # Default configurations
     training = TrainingConfig()
     temperature = TemperatureConfig()

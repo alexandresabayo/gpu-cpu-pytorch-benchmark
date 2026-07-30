@@ -19,9 +19,9 @@ are flattened into their own top-level column, e.g. `test_accuracy`.
 
 import csv
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
-from ..richlog import Logger, StepHandle, NULL_STEP
+from ..richlog import current
 
 
 def _flatten_metrics(metrics: Dict[str, Dict[str, float]]) -> Dict[str, Any]:
@@ -109,8 +109,7 @@ def _write_csv(path: Path, rows: List[Dict[str, Any]]) -> None:
         writer.writerows(rows)
 
 
-def export_results_csv(results: List[dict], save_dir: str = 'results', run_timestamp: Optional[str] = None,
-                        *, log: Union[StepHandle, Logger] = NULL_STEP) -> None:
+def export_results_csv(results: List[dict], save_dir: str = 'results', run_timestamp: Optional[str] = None) -> None:
     """Export both result "tabs" as CSV files, flattened as described above:
 
       - `results_summary.csv`: one row per experiment, matching the
@@ -120,10 +119,11 @@ def export_results_csv(results: List[dict], save_dir: str = 'results', run_times
         train/val/test metric flattened into its own top-level column
         (e.g. `test_accuracy`, `val_loss`) instead of a nested dict.
 
+    Resolves whatever's currently open via richlog.current() — a StepHandle
+    mid-run, or the root Logger for main.py's final summary, called after
+    every step has already closed (both just need `.block()`).
+
     Args:
-        log: open StepHandle, or the bare Logger if called after every step
-            has already closed (main.py's final summary calls this the same
-            way it calls `print_metrics_summary` — both just need `.block()`).
         results: list of per-experiment result dicts, as returned by
             `run_experiment` (name, n_params, cpu_time, gpu_time,
             cpu_metrics, gpu_metrics).
@@ -132,6 +132,7 @@ def export_results_csv(results: List[dict], save_dir: str = 'results', run_times
             land alongside this run's plots under `results/<run_timestamp>/`.
             If None, the files are written directly under `save_dir`.
     """
+    log = current()
     results_path = Path(save_dir)
     if run_timestamp:
         results_path = results_path / run_timestamp

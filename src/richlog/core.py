@@ -37,6 +37,7 @@ Usage:
 
 from __future__ import annotations
 
+import contextvars
 import io
 import time
 from collections import deque
@@ -246,23 +247,39 @@ class NullStepHandle:
 
 
 # Shared instance: NullStepHandle is stateless, so one instance can be
-# reused everywhere as the default `step`/`log` argument instead of
-# constructing a new one per call.
+# reused everywhere as the default value of the context stack below.
 NULL_STEP = NullStepHandle()
+
+# Holds whichever StepHandle (or root Logger) is innermost right now.
+# Logger.__enter__ sets itself as the root value; each nested
+# `with logger.step(...)`/`with step.child(...)` pushes its own StepHandle
+# on top and restores the previous value on exit. Falls back to NULL_STEP
+# when nothing is open at all.
+_current: contextvars.ContextVar = contextvars.ContextVar("richlog_current", default=NULL_STEP)
+
+
+def current():
+    """Return the innermost open StepHandle, the root Logger if no step is
+    open, or NULL_STEP if no Logger is open either."""
+    return _current.get()
 
 
 class _StepContext:
     def __init__(self, logger: "Logger", title: str):
         self._logger = logger
         self._title = title
+        self._token = None
 
     def __enter__(self) -> StepHandle:
         state = self._logger._push(self._title)
-        return StepHandle(self._logger, state)
+        handle = StepHandle(self._logger, state)
+        self._token = _current.set(handle)
+        return handle
 
     def __exit__(self, exc_type, exc, tb) -> bool:
         status = "failure" if exc_type else "success"
         self._logger._pop(status)
+        _current.reset(self._token)
         return False  # never swallow exceptions
 
 
@@ -272,6 +289,7 @@ class Logger:
         self.console = console or Console(highlight=False)
         self._stack: List[StepState] = []
         self._live = None
+        self._token = None
 
         log_path = Path(log_dir)
         log_path.mkdir(parents=True, exist_ok=True)
@@ -311,9 +329,11 @@ class Logger:
         self._file.close()
 
     def __enter__(self) -> "Logger":
+        self._token = _current.set(self)
         return self
 
     def __exit__(self, exc_type, exc, tb) -> None:
+        _current.reset(self._token)
         self.close()
 
     # -- internals ----------------------------------------------------------

@@ -22,12 +22,10 @@ Neither generator imposes a sample cap below what the source data
 supports by default; both accept an optional argument to request fewer
 samples, but leaving it unset returns everything available.
 
-Every function below accepts a keyword-only `step: StepHandle` argument
-(default: a shared no-op `NULL_STEP`), used to log into an already-open
-Step (or Step.child()) if the caller has one; none of these functions open
-their own top-level step, except generate_all_datasets/get_dataset_paths/
-ensure_datasets_exist which open *nested* child steps for the two datasets
-they manage.
+Every function below logs into whichever Step is currently open via
+richlog.current(); none of these functions open their own top-level step,
+except generate_all_datasets/get_dataset_paths/ensure_datasets_exist which
+open nested child steps for the two datasets they manage.
 """
 
 import os
@@ -44,15 +42,13 @@ import numpy as np
 import pandas as pd
 import torch
 
-from ..richlog import StepHandle, NULL_STEP
+from ..richlog import current
 
 
 def download_mnist_csv(
     output_dir: str = "datasets",
     num_samples: Optional[int] = None,
     force_download: bool = False,
-    *,
-    step: StepHandle = NULL_STEP
 ) -> Tuple[str, str]:
     """Download MNIST dataset and save as CSV files.
 
@@ -61,8 +57,6 @@ def download_mnist_csv(
     files matching the expected format.
 
     Args:
-        step: open StepHandle to log into (e.g. a "Generating MNIST" child
-            step opened by the caller).
         output_dir: Directory to save CSV files (default: "datasets")
         num_samples: Number of samples to extract. If None (default), ALL
             available samples are used; 70,000 total (60,000 train +
@@ -75,6 +69,8 @@ def download_mnist_csv(
     Raises:
         ImportError: If torchvision is not installed
     """
+    step = current()
+
     try:
         from torchvision.datasets import MNIST
         from torchvision.transforms import ToTensor
@@ -154,8 +150,6 @@ def download_jena_climate_csv(
     output_dir: str = "datasets",
     force_download: bool = False,
     target_samples: Optional[int] = None,
-    *,
-    step: StepHandle = NULL_STEP
 ) -> Tuple[str, str]:
     """Download Jena Climate dataset and save as CSV files.
 
@@ -169,8 +163,6 @@ def download_jena_climate_csv(
     and creates windows to match the expected CSV shape.
 
     Args:
-        step: open StepHandle to log into (e.g. a "Generating Temperature
-            (Jena Climate)" child step opened by the caller).
         output_dir: Directory to save CSV files (default: "datasets")
         force_download: If True, re-download even if files exist
         target_samples: Number of sliding-window samples to generate. If
@@ -185,6 +177,8 @@ def download_jena_climate_csv(
         ValueError: If temperature column not found, or if an explicit
             target_samples is requested that exceeds what's available.
     """
+    step = current()
+
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -358,17 +352,14 @@ def download_jena_climate_csv(
 def generate_all_datasets(
     output_dir: str = "datasets",
     force_download: bool = False,
-    *,
-    step: StepHandle = NULL_STEP
 ) -> dict:
     """Generate all datasets from raw sources, using ALL available samples
     for both (no caps).
 
-    Opens two child steps under `step`: "Generating MNIST" and
-    "Generating Temperature (Jena Climate)".
+    Opens two child steps under the currently active step: "Generating
+    MNIST" and "Generating Temperature (Jena Climate)".
 
     Args:
-        step: open StepHandle this call nests its two child steps under.
         output_dir: Directory to save CSV files
         force_download: If True, re-download all datasets
 
@@ -385,21 +376,22 @@ def generate_all_datasets(
         ImportError: If torchvision is not installed (via download_mnist_csv)
         ValueError: If data issues occur (via download_jena_climate_csv)
     """
+    step = current()
     results = {}
 
     # Generate MNIST; all 70,000 samples (train + test)
-    with step.child("Generating MNIST") as mnist_step:
+    with step.child("Generating MNIST"):
         mnist_inputs, mnist_labels = download_mnist_csv(
-            output_dir, num_samples=None, force_download=force_download, step=mnist_step
+            output_dir, num_samples=None, force_download=force_download
         )
         results['mnist_inputs'] = mnist_inputs
         results['mnist_labels'] = mnist_labels
 
     # Generate Temperature (Jena Climate); all windows at 2-hour
     # resolution (~34,951), not the raw 10-minute row count.
-    with step.child("Generating Temperature (Jena Climate)") as temp_step:
+    with step.child("Generating Temperature (Jena Climate)"):
         temp_inputs, temp_labels = download_jena_climate_csv(
-            output_dir, target_samples=None, force_download=force_download, step=temp_step
+            output_dir, target_samples=None, force_download=force_download
         )
         results['temperature_inputs'] = temp_inputs
         results['temperature_labels'] = temp_labels
@@ -411,14 +403,10 @@ def get_dataset_paths(
     dataset_name: str,
     output_dir: str = "datasets",
     try_download: bool = True,
-    *,
-    step: StepHandle = NULL_STEP
 ) -> Tuple[str, str]:
     """Get dataset paths, optionally downloading if not found.
 
     Args:
-        step: open StepHandle this call nests a child step under, if a
-            download is actually needed.
         dataset_name: Either 'mnist' or 'temperature'
         output_dir: Directory where CSV files are stored
         try_download: If True, attempt to download if files don't exist
@@ -429,6 +417,7 @@ def get_dataset_paths(
     Raises:
         FileNotFoundError: If files don't exist and try_download is False
     """
+    step = current()
     output_dir = Path(output_dir)
 
     if dataset_name == 'mnist':
@@ -436,15 +425,15 @@ def get_dataset_paths(
         labels_path = output_dir / "mnist_digit_labels.csv"
 
         if try_download and (not inputs_path.exists() or not labels_path.exists()):
-            with step.child("Generating MNIST") as sub:
-                return download_mnist_csv(output_dir, num_samples=None, step=sub)
+            with step.child("Generating MNIST"):
+                return download_mnist_csv(output_dir, num_samples=None)
     elif dataset_name == 'temperature':
         inputs_path = output_dir / "temperature_inputs.csv"
         labels_path = output_dir / "temperature_labels.csv"
 
         if try_download and (not inputs_path.exists() or not labels_path.exists()):
-            with step.child("Generating Temperature (Jena Climate)") as sub:
-                return download_jena_climate_csv(output_dir, target_samples=None, step=sub)
+            with step.child("Generating Temperature (Jena Climate)"):
+                return download_jena_climate_csv(output_dir, target_samples=None)
     else:
         raise ValueError(f"Unknown dataset: {dataset_name}. Use 'mnist' or 'temperature'.")
 
@@ -462,18 +451,15 @@ def get_dataset_paths(
 def ensure_datasets_exist(
     dataset_dir: str = "datasets",
     auto_download: bool = True,
-    *,
-    step: StepHandle = NULL_STEP
 ) -> dict:
     """Ensure dataset CSV files exist, downloading from raw sources if needed.
 
     If anything is missing, opens a "Downloading datasets" child step under
-    `step` (which itself nests "Generating MNIST" / "Generating Temperature
-    (Jena Climate)" via generate_all_datasets). If everything already
-    exists, just logs one info line onto `step` and returns.
+    the currently active step (which itself nests "Generating MNIST" /
+    "Generating Temperature (Jena Climate)" via generate_all_datasets). If
+    everything already exists, just logs one info line and returns.
 
     Args:
-        step: open StepHandle to log into / nest the download step under.
         dataset_dir: Directory where CSV files should be stored
         auto_download: If True, automatically download and generate if files don't exist
 
@@ -486,6 +472,7 @@ def ensure_datasets_exist(
             'mnist_labels': str
         }
     """
+    step = current()
     dataset_dir = Path(dataset_dir)
     dataset_dir.mkdir(parents=True, exist_ok=True)
 
@@ -503,7 +490,7 @@ def ensure_datasets_exist(
         step.info(f"missing datasets: {missing_files}")
         with step.child("Downloading datasets") as dl_step:
             dl_step.info("no sample caps; downloading from raw sources")
-            generate_all_datasets(dataset_dir, step=dl_step)
+            generate_all_datasets(dataset_dir)
         return {
             'temperature_inputs': str(dataset_dir / 'temperature_inputs.csv'),
             'temperature_labels': str(dataset_dir / 'temperature_labels.csv'),
@@ -526,7 +513,7 @@ def ensure_datasets_exist(
         }
 
 
-def cleanup_intermediate_files(output_dir: str = "datasets", *, step: StepHandle = NULL_STEP) -> None:
+def cleanup_intermediate_files(output_dir: str = "datasets") -> None:
     """Remove intermediate download/cache artifacts, keeping only the
     final CSV outputs (mnist_digit_inputs.csv, mnist_digit_labels.csv,
     temperature_inputs.csv, temperature_labels.csv).
@@ -537,9 +524,9 @@ def cleanup_intermediate_files(output_dir: str = "datasets", *, step: StepHandle
       - datasets/jena_climate_2009_2016.csv.zip  (downloaded zip)
 
     Args:
-        step: open StepHandle to log removals into.
         output_dir: directory to clean up.
     """
+    step = current()
     output_dir = Path(output_dir)
 
     mnist_cache = output_dir / ".mnist_cache"

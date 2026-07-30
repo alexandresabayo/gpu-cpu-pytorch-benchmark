@@ -5,17 +5,15 @@ from datetime import datetime
 from typing import Optional
 import re
 
-from ..richlog import StepHandle, NULL_STEP
+from ..richlog import current
 
 
 
 def save_plot(fig, experiment_name: str, filename: str,
-              save_dir: str = 'results', run_timestamp: Optional[str] = None,
-              *, step: StepHandle = NULL_STEP) -> None:
+              save_dir: str = 'results', run_timestamp: Optional[str] = None) -> None:
     """Save plot as PNG file in organized directory structure
     
     Args:
-        step: open StepHandle to log the save confirmation into.
         fig: Matplotlib figure to save
         experiment_name: Name of the experiment
         filename: Filename for the plot (e.g., 'training_history.png')
@@ -23,6 +21,8 @@ def save_plot(fig, experiment_name: str, filename: str,
         run_timestamp: Optional timestamp for the main run (YYYY-MM-DD_HHhMM format)
                       If None, creates a new timestamp
     """
+    step = current()
+
     # Create results directory if it doesn't exist
     results_path = Path(save_dir)
     results_path.mkdir(exist_ok=True)

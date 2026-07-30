@@ -39,16 +39,15 @@ def main():
                 step.info(f"GPU memory: {torch.cuda.get_device_properties(0).total_memory / 1e9:.2f} GB")
             step.info(f"run timestamp: {run_timestamp}")
 
-            config, temp, mnist, dataset_config = load_config_from_yaml(step=step)
+            config, temp, mnist, dataset_config = load_config_from_yaml()
 
             # Downloading from raw sources if needed
             dataset_paths = ensure_datasets_exist(
                 dataset_config.dataset_dir,
-                auto_download=dataset_config.auto_download,
-                step=step
+                auto_download=dataset_config.auto_download
             )
 
-            cleanup_intermediate_files(dataset_config.dataset_dir, step=step)
+            cleanup_intermediate_files(dataset_config.dataset_dir)
 
             # Load datasets with memory efficiency
             X_temp = load_as_tensor(dataset_paths['temperature_inputs'], (-1, 84, 1))
@@ -125,10 +124,10 @@ def main():
                 model_gpu = copy.deepcopy(model_cpu)
                 criterion = experiment['criterion']
 
-                result = run_experiment(name, model_cpu, model_gpu, loaders, criterion, config, run_timestamp, step=step)
+                result = run_experiment(name, model_cpu, model_gpu, loaders, criterion, config, run_timestamp)
 
                 visualize_predictions(name, model_gpu, loaders['test'], experiment['visualize_samples'],
-                                      save_dir='results', run_timestamp=run_timestamp, step=step)
+                                      save_dir='results', run_timestamp=run_timestamp)
 
             results.append(result)
 
@@ -166,9 +165,9 @@ def main():
             metrics = result['gpu_metrics'] or result['cpu_metrics']
             header = f"\n{result['name']} (params: {result['n_params']:,}):"
             log.block(header, indent=3)
-            print_metrics_summary(metrics, step=log)
+            print_metrics_summary(metrics)
         
-        export_results_csv(results, save_dir='results', run_timestamp=run_timestamp, log=log)
+        export_results_csv(results, save_dir='results', run_timestamp=run_timestamp)
 
 
 if __name__ == '__main__':
