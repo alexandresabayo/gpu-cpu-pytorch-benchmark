@@ -41,10 +41,6 @@ class DatasetConfig:
     """Dataset configuration for loading and auto-download"""
     dataset_dir: str = "datasets"
     auto_download: bool = True
-    temperature_inputs: str = "datasets/temperature_inputs.csv"
-    temperature_labels: str = "datasets/temperature_labels.csv"
-    mnist_inputs: str = "datasets/mnist_digit_inputs.csv"
-    mnist_labels: str = "datasets/mnist_digit_labels.csv"
 
 
 def _from_dict(cls, data: dict):

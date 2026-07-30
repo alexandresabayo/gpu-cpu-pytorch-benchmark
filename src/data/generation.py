@@ -44,6 +44,11 @@ import torch
 
 from ..richlog import current
 
+DATASETS = {
+    "mnist": {"inputs": "mnist_digit_inputs.csv", "labels": "mnist_digit_labels.csv"},
+    "temperature": {"inputs": "temperature_inputs.csv", "labels": "temperature_labels.csv"},
+}
+
 
 def download_mnist_csv(
     output_dir: str = "datasets",
@@ -84,8 +89,8 @@ def download_mnist_csv(
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    inputs_path = output_dir / "mnist_digit_inputs.csv"
-    labels_path = output_dir / "mnist_digit_labels.csv"
+    inputs_path = output_dir / DATASETS["mnist"]["inputs"]
+    labels_path = output_dir / DATASETS["mnist"]["labels"]
 
     # Check if files already exist
     if inputs_path.exists() and labels_path.exists() and not force_download:
@@ -182,8 +187,8 @@ def download_jena_climate_csv(
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    inputs_path = output_dir / "temperature_inputs.csv"
-    labels_path = output_dir / "temperature_labels.csv"
+    inputs_path = output_dir / DATASETS["temperature"]["inputs"]
+    labels_path = output_dir / DATASETS["temperature"]["labels"]
 
     # Check if files already exist
     if inputs_path.exists() and labels_path.exists() and not force_download:
@@ -421,15 +426,15 @@ def get_dataset_paths(
     output_dir = Path(output_dir)
 
     if dataset_name == 'mnist':
-        inputs_path = output_dir / "mnist_digit_inputs.csv"
-        labels_path = output_dir / "mnist_digit_labels.csv"
+        inputs_path = output_dir / DATASETS["mnist"]["inputs"]
+        labels_path = output_dir / DATASETS["mnist"]["labels"]
 
         if try_download and (not inputs_path.exists() or not labels_path.exists()):
             with step.child("Generating MNIST"):
                 return download_mnist_csv(output_dir, num_samples=None)
     elif dataset_name == 'temperature':
-        inputs_path = output_dir / "temperature_inputs.csv"
-        labels_path = output_dir / "temperature_labels.csv"
+        inputs_path = output_dir / DATASETS["temperature"]["inputs"]
+        labels_path = output_dir / DATASETS["temperature"]["labels"]
 
         if try_download and (not inputs_path.exists() or not labels_path.exists()):
             with step.child("Generating Temperature (Jena Climate)"):
@@ -478,25 +483,27 @@ def ensure_datasets_exist(
 
     # Check which datasets are missing
     expected_files = [
-        'temperature_inputs.csv',
-        'temperature_labels.csv',
-        'mnist_digit_inputs.csv',
-        'mnist_digit_labels.csv'
+        DATASETS["temperature"]["inputs"],
+        DATASETS["temperature"]["labels"],
+        DATASETS["mnist"]["inputs"],
+        DATASETS["mnist"]["labels"],
     ]
 
     missing_files = [f for f in expected_files if not (dataset_dir / f).exists()]
+
+    paths = {
+        'temperature_inputs': str(dataset_dir / DATASETS["temperature"]["inputs"]),
+        'temperature_labels': str(dataset_dir / DATASETS["temperature"]["labels"]),
+        'mnist_inputs': str(dataset_dir / DATASETS["mnist"]["inputs"]),
+        'mnist_labels': str(dataset_dir / DATASETS["mnist"]["labels"]),
+    }
 
     if missing_files and auto_download:
         step.info(f"missing datasets: {missing_files}")
         with step.child("Downloading datasets") as dl_step:
             dl_step.info("no sample caps; downloading from raw sources")
             generate_all_datasets(dataset_dir)
-        return {
-            'temperature_inputs': str(dataset_dir / 'temperature_inputs.csv'),
-            'temperature_labels': str(dataset_dir / 'temperature_labels.csv'),
-            'mnist_inputs': str(dataset_dir / 'mnist_digit_inputs.csv'),
-            'mnist_labels': str(dataset_dir / 'mnist_digit_labels.csv')
-        }
+        return paths
     elif missing_files:
         step.error(f"dataset files missing in {dataset_dir}: {missing_files}")
         raise FileNotFoundError(
@@ -505,12 +512,7 @@ def ensure_datasets_exist(
         )
     else:
         step.info("all dataset files found locally")
-        return {
-            'temperature_inputs': str(dataset_dir / 'temperature_inputs.csv'),
-            'temperature_labels': str(dataset_dir / 'temperature_labels.csv'),
-            'mnist_inputs': str(dataset_dir / 'mnist_digit_inputs.csv'),
-            'mnist_labels': str(dataset_dir / 'mnist_digit_labels.csv')
-        }
+        return paths
 
 
 def cleanup_intermediate_files(output_dir: str = "datasets") -> None:

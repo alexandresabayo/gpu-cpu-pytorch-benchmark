@@ -28,9 +28,3 @@ datasets:
   
   # Enable automatic download from raw sources if files don't exist
   auto_download: true
-  
-  # Dataset file paths (can be overridden)
-  temperature_inputs: "datasets/temperature_inputs.csv"
-  temperature_labels: "datasets/temperature_labels.csv"
-  mnist_inputs: "datasets/mnist_digit_inputs.csv"
-  mnist_labels: "datasets/mnist_digit_labels.csv"
