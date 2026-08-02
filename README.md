@@ -60,7 +60,7 @@ For each experiment, the pipeline reports:
 - CPU and GPU training time, with a speedup ratio when a GPU is available
 - A final summary table across all experiments
 - Training history and prediction plots, saved under `results/`
-- CSV exports of both the summary table and the full per-split metrics (`results_summary.csv`, `results_metrics.csv`)
+- CSV exports of both the summary table and the full per-split metrics
 
 ### A note on the CPU vs GPU numbers
 
@@ -71,4 +71,4 @@ This project measures training time on the hardware it happens to run on. It isn
 - There's no dedicated warm-up pass excluded from the clock, so GPU timing includes first-batch overhead (cuDNN autotuning, memory allocation).
 - Early stopping means CPU and GPU can stop at different epoch counts, so part of any time difference may reflect that rather than raw hardware speed.
 
-If you need rigorous numbers, add a fixed seed, a few untimed warm-up iterations, and average several runs per device.
+If you need rigorous numbers, add a fixed seed, a few untimed warm-up iterations, disable early stopping so every run trains the same number of epochs, and average several runs per device.
